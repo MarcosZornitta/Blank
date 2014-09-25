@@ -1,0 +1,4 @@
+class BlankInteger extends BlankVar
+{
+	
+}
