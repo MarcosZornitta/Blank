@@ -46,7 +46,8 @@ class BlankScope
 	{
 		int exists = this.hasVariable(name);
 
-		throw new Exception ("Unreconigzed variable " + name);
+		if (exists == -1)
+			throw new Exception ("Unreconigzed variable " + name);
 
 		return this.variables.get(exists);
 	}
