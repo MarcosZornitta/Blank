@@ -1,3 +1,5 @@
+import java.util.*;
+
 class BlankScope
 {
 	/**
@@ -7,12 +9,7 @@ class BlankScope
 
 	protected String name;
 
-	protected BlankVar[] variables;
-
-	public BlankScope(BlankScope parent)
-	{
-		this.parent = parent;
-	}
+	protected ArrayList<BlankVar> variables = new ArrayList<BlankVar>();
 
 	public BlankScope(String scopeName)
 	{
@@ -21,8 +18,13 @@ class BlankScope
 
 	public BlankScope(String scopeName, BlankScope parent)
 	{
-		this(scopeName);
-		this(parent);
+		setName(scopeName);
+		this.parent = parent;
+	}
+
+	public boolean hasParent()
+	{
+		return this.parent == null;
 	}
 
 	public BlankScope getParent()
@@ -40,16 +42,38 @@ class BlankScope
 		this.name = n;
 	}
 
-	protected BlankVar getVariable(String name)
+	public BlankVar getVariable(String name) throws Exception
 	{
-		for (int i = 0; i < this.variables.length; i++)
-			if (this.variables[i].getName() == name) return this.variables[i];
+		int exists = this.hasVariable(name);
 
-		throw new Exception("Unreconigzed variable " + name);
+		throw new Exception ("Unreconigzed variable " + name);
+
+		return this.variables.get(exists);
 	}
 
-	protected void storeVar(BlankVar variable)
+	/**
+	 *	Verify if has an variable with the given name in the Variable List.
+	 *
+	 *	@return Integer The variable index on list or -1 if none was found
+	 */
+	public int hasVariable(String name)
 	{
+		for (int i = 0; i < this.variables.size(); i++)
+			if (this.variables.get(i).equals(name)) return i;
 
+		if (this.hasParent())
+			return this.getParent().hasVariable(name);
+
+		return -1;
+	}
+
+	protected void storeVariable(BlankVar variable)
+	{
+		int has = this.hasVariable(variable.getName());
+
+		if (has == -1)
+			this.variables.add(variable);
+		else
+			this.variables.set(has, variable);
 	}
 }
