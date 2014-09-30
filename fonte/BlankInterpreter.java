@@ -1,6 +1,10 @@
+import java.util.*;
+
 class BlankInterpreter
 {
-	protected BlankTokenizer tokenizer = BlankTokenizer.getInstance();
+	//protected BlankTokenizer tokenizer = BlankTokenizer.getInstance();
+	StringTokenizer tokenizer;
+
 	// protected BlankGrammar   grammar   = BlankGrammar.getInstance();
 	// protected BlankAction    action    = BlankAction.getInstance();
 
@@ -15,8 +19,15 @@ class BlankInterpreter
 
 	}*/
 
-	public void printLine(String line)
+	public boolean understand(String line)
 	{
-		System.out.println(line);
+		Pattern tokenIdentifier;
+		System.out.println(tokenizer.nextToken("(?:\\bvar\\W)")); // Token var
+		System.out.println("(\\w+)|(\\d)(?=[\\W])");
+		System.out.println(tokenizer.nextToken("(\\w+)|(\\d)(?=[\\W])")); // prop var
+
+		// tokenizer.dumpTokens();
+
+		return true;
 	}
 }

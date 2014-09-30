@@ -1,3 +1,5 @@
+import java.util.*;
+
 class BlankTokenizer
 {
 	/**
@@ -53,39 +55,120 @@ class BlankTokenizer
 	 *	@see    this.tokenDefinition
 	 *	@return boolean true if a token is identified, false otherwise;
 	 */
-	private boolean isToken(char c)
+	protected boolean isToken(char c)
 	{
-		for (int i = 0; i < this.tokenDefinition.length; i++)
-			if (c == this.tokenDefinition[i]) return true;
+		for (int i = 0; i < this.tokenDefinition.length; i++) {
+			for (int j = 0; j < this.tokenDefinition[i].length(); j++) {
+				if ((c + "") == this.tokenDefinition[i]) return true;
+			}
+		}
 
 		return false;
 	}
 
-	private void storeToken(char c)
+	/*protected void storeToken(String s)
 	{
 		if (this.tokenDefinition == null) {
 			this.tokenDefinition = new String[1];
-			this.tokenDefinition[1] = c;
+			this.tokenDefinition[1] = s;
 			return;
 		}
 
 		try {
-			this.tokenDefinition[this.tokenDefinition.length] = c;
+			this.tokenDefinition[this.tokenDefinition.length] = s;
+		} catch (Exception e) {
+			this.tokenDefinition = new String[this.tokenDefinition.length * 2];
+		}
+	}*/
+
+	protected void storeParam(String line, int paramStart)
+	{
+		int i = paramStart;
+		String param = "";
+
+		while (!this.isToken(line.charAt(i))) {
+			param += line.charAt(i);
+		}
+
+		this.storeToken(param);
+	}
+
+	protected void storeToken(String s)
+	{
+		if (this.tokenDefinition == null) {
+			this.tokenDefinition = new String[1];
+			this.tokenDefinition[1] = s;
+			return;
+		}
+
+		try {
+			this.tokenDefinition[this.tokenDefinition.length] = s;
 		} catch (Exception e) {
 			this.tokenDefinition = new String[this.tokenDefinition.length * 2];
 		}
 	}
 
 	/** 
-	 *	Provides to this.tokenList, in order, the identified tokens by interpretor
+	 *	Provides to this.tokenList, in order, the identified tokens by interpreter
 	 */
 	public boolean tokenize(String line)
 	{
-		for (int i = 0; i < line.length(); i++) {
-			if (this.isToken(line[i])) this.storeToken(line[i]);
-			else this.
+		// for (int i = 0; i < line.length(); i++) {
+		// 	if (this.isToken(line.charAt(i))) this.storeToken(line.charAt(i) + "");
+		// 	else this.storeParam(line, i);
+		// 	System.out.println("Loop " + i);
+		// }
+
+		// Var Tokenize: (?:\bvar\W)
+
+		StringTokenizer st = new StringTokenizer(line, "\\(\\)\\/\\;\\,\\+\\-\"\\*\\=\\{\\}\\s|(print)|(if)|(var)");
+
+		// while (st.hasMoreTokens()) {
+		// 	System.out.println(st.nextToken());
+		// }
+
+		while (st.hasMoreElements()) {
+			System.out.println(st.nextElement());
 		}
 
 		return true;
+
+		// boolean readingToken = false, isToken = false;
+		// int tokenReadingStart;
+
+		// for (int i = 0; i < line.length(); i++) {
+		// 	if (line.charAt(i) == ' ') continue;
+
+		// 	for (int j = 0; j < this.tokenDefinition.length; j++) {
+		// 		for (int k = 0; k < this.tokenDefinition[j].length(); k++) {
+		// 			if (line.charAt(i) != this.tokenDefinition[j].charAt(k)) {
+		// 				isToken = false;
+		// 				break;
+		// 			}
+
+		// 			if (k == this.tokenDefinition[j].length() - 1) {
+		// 				isToken = true;
+		// 				this.storeToken(this.tokenDefinition[j]);
+		// 			}
+		// 		}
+		// 	}
+		// }
+
+		// String[] tokens = line.split("\\s+");
+
+		// System.out.println(tokens.length);
+
+		// for (int i = 0; i < tokens.length; i++)	{
+		// 	System.out.println("Token at [" + i + "]: " + tokens[i]);
+		// }
+
+		// return true;
+	}
+
+	public void dumpTokens()
+	{
+		for (int i = 0; i < this.tokenList.length; i++)	{
+			System.out.println("Token at [" + i + "]: " + this.tokenList[i]);
+		}
 	}
 }

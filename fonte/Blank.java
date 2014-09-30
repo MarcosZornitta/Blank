@@ -18,6 +18,8 @@ class Blank
 			System.out.println("Não foi possível ler o arquivo: " + (args.length > 0 ? args[0] : "(desconhecido)"));
 		}
 
-		interpreter.printLine(s.nextLine());
+		while (s.hasNext()) {
+			interpreter.understand(s.nextLine());
+		}
 	}
 }
