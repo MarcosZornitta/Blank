@@ -1,0 +1,7 @@
+var a = 10;
+var b;
+var c;
+
+b = 12;
+
+c = a + b;
