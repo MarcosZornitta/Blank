@@ -1,9 +1,9 @@
-package blank.lang;
-
 import java.io.*;
 import java.nio.charset.*;
 import java.nio.file.*;
 import java.util.*;
+
+import blank.lang.*;
 
 class Blank
 {
