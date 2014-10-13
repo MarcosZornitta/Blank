@@ -1,3 +1,5 @@
+package blank.lang;
+
 class BlankVar
 {
 	protected String name;

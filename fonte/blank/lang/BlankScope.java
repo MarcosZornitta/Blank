@@ -1,3 +1,5 @@
+package blank.lang;
+
 import java.util.*;
 
 class BlankScope
