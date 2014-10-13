@@ -3,16 +3,15 @@ package blank.lang;
 import java.util.*;
 import java.util.regex.*;
 
-class BlankInterpreter
+public class BlankInterpreter
 {
 	StringTokenizer tokenizer;
 
 	/**
-	 *	The main function of the Blank Language Interpreter
-	 *	It gather the line, executes it's operations and return the next line to be read
-	 *	@param String line        The current line content
-	 *	@param int    lineNumber  The identification of current line
-	 *	@return int Number of the next line to be read
+	 *	A função principal, responsável por interpretar e executar as ações contidas na linha
+	 *	@param  String line        A linha para ser interpretada
+	 *	@param  int    lineNumber  A identificação da linha atual
+	 *	@return int                O número da próxima linha a ser lida
 	 */
 	public int understand(String line, int lineNumber)
 	{
