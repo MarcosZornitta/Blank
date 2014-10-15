@@ -5,7 +5,7 @@ import java.util.regex.*;
 
 public class BlankInterpreter
 {
-	StringTokenizer tokenizer;
+	BlankScope mainScope = new BlankScope("main");
 
 	/**
 	 *	A função principal, responsável por interpretar e executar as ações contidas na linha
@@ -15,10 +15,22 @@ public class BlankInterpreter
 	 */
 	public int understand(String line, int lineNumber)
 	{
-		// Pattern tokenIdentifier;
-		// System.out.println(tokenizer.nextToken("(?:\\bvar\\W)")); // Token var
-		// System.out.println("(\\w+)|(\\d)(?=[\\W])");
-		// System.out.println(tokenizer.nextToken("(\\w+)|(\\d)(?=[\\W])")); // prop var
+		Pattern varIdentifier = Pattern.compile("(?:\\bvar\\W+)");
+		Matcher varMatcher    = varIdentifier.matcher(line);
+
+		Pattern paramIdentifier = Pattern.compile("(?:\\w+)");
+		Matcher paramMatcher    = paramIdentifier.matcher(line);
+
+		if (varMatcher.matches()) {
+			String analysis = line.split(varIdentifier, 1)[1];
+			Matcher paramMatcher = paramIdentifier.matcher(analysis);
+			if (paramMatcher.matches()) {
+				
+			}
+		}
+
+		System.out.println("(\\w+)|(\\d)(?=[\\W])");
+		System.out.println(tokenizer.nextToken("(\\w+)|(\\d)(?=[\\W])")); // prop var
 
 		System.out.println("Reading line " + lineNumber + ": " + line);
 
