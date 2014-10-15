@@ -16,10 +16,7 @@ class Blank
 
 		try {
 			f = new File(args[0]);
-			s = new Scanner(f);
-		} catch (IOException e) {
-			System.out.println("Não foi possível ler o arquivo: " + (args.length > 0 ? args[0] : "(desconhecido)"));
-		} catch (Exception e) {
+		} catch (ArrayIndexOutOfBoundsException e) {
 			System.out.println("Não foi possível ler o arquivo: " + (args.length > 0 ? args[0] : "(desconhecido)"));
 		}
 
