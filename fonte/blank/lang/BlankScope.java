@@ -7,7 +7,7 @@ class BlankScope
 	/**
 	 *	@var BlankScope parent The parent scope of the current scope
 	 */
-	protected BlankScope parent;
+	protected BlankScope parent = null;
 
 	protected String name;
 
@@ -26,7 +26,7 @@ class BlankScope
 
 	public boolean hasParent()
 	{
-		return this.parent == null;
+		return (this.parent != null);
 	}
 
 	public BlankScope getParent()

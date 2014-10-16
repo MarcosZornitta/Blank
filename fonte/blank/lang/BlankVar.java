@@ -5,6 +5,11 @@ class BlankVar
 	protected String name;
 	protected String value;
 
+	public BlankVar(String name)
+	{
+		this(name, "");
+	}
+
 	public BlankVar(String name, String value)
 	{
 		this.name  = name;

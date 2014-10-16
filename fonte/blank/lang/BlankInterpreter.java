@@ -15,26 +15,21 @@ public class BlankInterpreter
 	 */
 	public int understand(String line, int lineNumber)
 	{
-		Pattern varIdentifier = Pattern.compile("(?:\\bvar\\W+)");
+		Pattern varIdentifier = Pattern.compile("\\bvar\\W+");
 		Matcher varMatcher    = varIdentifier.matcher(line);
 
-		Pattern paramIdentifier = Pattern.compile("(?:\\w+)");
+		Pattern paramIdentifier = Pattern.compile("\\w+");
 		Matcher paramMatcher    = paramIdentifier.matcher(line);
 
-		if (varMatcher.matches()) {
-			String analysis = line.split(varIdentifier, 1)[1];
-			Matcher paramMatcher = paramIdentifier.matcher(analysis);
-			if (paramMatcher.matches()) {
-				
+		if (varMatcher.find()) {
+			String analysis = line.split(varIdentifier.toString(), 2)[1];
+			System.out.println(analysis);
+			paramMatcher = paramIdentifier.matcher(analysis);
+			if (paramMatcher.find()) {
+				BlankVar var = new BlankVar(paramMatcher.toMatchResult().group(), "");
+				mainScope.storeVariable(var);
 			}
 		}
-
-		System.out.println("(\\w+)|(\\d)(?=[\\W])");
-		System.out.println(tokenizer.nextToken("(\\w+)|(\\d)(?=[\\W])")); // prop var
-
-		System.out.println("Reading line " + lineNumber + ": " + line);
-
-		// tokenizer.dumpTokens();
 
 		return ++lineNumber;
 	}
