@@ -1,3 +1,13 @@
+/**
+ *	Blank Language Interpreter
+ *	
+ *	Interpretador da linguagem "Blank"
+ *
+ *	@see https://github.com/MarcosZornitta/Blank
+ *	@author Gabriel Henrique Rudey (@whothey)
+ *	@version Alpha
+ */
+
 import java.io.*;
 import java.nio.charset.*;
 import java.nio.file.*;
