@@ -62,7 +62,7 @@ class BlankScope
 	public int hasVariable(String name)
 	{
 		for (int i = 0; i < this.variables.size(); i++)
-			if (this.variables.get(i).equals(name)) return i;
+			if (this.variables.get(i).getName().equals(name)) return i;
 
 		if (this.hasParent())
 			return this.getParent().hasVariable(name);
@@ -78,5 +78,10 @@ class BlankScope
 			this.variables.add(variable);
 		else
 			this.variables.set(has, variable);
+	}
+
+	public int countVariables()
+	{
+		return this.variables.size();
 	}
 }
