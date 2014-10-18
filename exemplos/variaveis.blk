@@ -1,2 +1,8 @@
-var a;
-a = 10;
+var a
+
+a = 10
+show a
+a = 20
+show a
+b = a
+show b
