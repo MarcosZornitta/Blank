@@ -60,6 +60,7 @@ public class BlankInterpreter
 		Matcher showMatcher;
 		Matcher sumSubMatcher;
 		Matcher divMultMatcher;
+		Matcher logicOpMatcher;
 		Matcher operationMatcher;
 
 		varMatcher = varIdentifier.matcher(line); // Prepara a verificação se existe o token var
@@ -123,6 +124,52 @@ public class BlankInterpreter
 		if (sumSubMatcher.find()) {
 			// Guarda a expressão encontrada para ser substituída mais tarde
 			String rawExpression = sumSubMatcher.toMatchResult().group();
+			String[] analysis = rawExpression.split(operationIdentifier.toString());
+
+			// Identifica a operação realizada
+			operationMatcher = operationIdentifier.matcher(rawExpression);
+			operationMatcher.find();
+			String op   = operationMatcher.toMatchResult().group().trim();
+			String val1 = analysis[0].trim();
+			String val2 = analysis[1].trim();
+
+			// Pega o primeiro valor
+			paramMatcher = paramIdentifier.matcher(val1);
+			if (paramMatcher.find()) {
+				String opValue1 = paramMatcher.toMatchResult().group();
+
+				if (mainScope.hasVariable(opValue1) >= 0) { // verifica se é uma variavel
+					var = mainScope.getVariable(opValue1);
+					val1 = var.getValue();
+				} else {
+					val1 = opValue1;
+				}
+			}
+
+			// Encontra o segundo valor
+			paramMatcher = paramIdentifier.matcher(val2);
+			if (paramMatcher.find()) {
+				String opValue2 = paramMatcher.toMatchResult().group();
+
+				if (mainScope.hasVariable(opValue2) >= 0) { // verifica se é uma variavel
+					var = mainScope.getVariable(opValue2);
+					val2 = var.getValue();
+				} else {
+					val2 = opValue2;
+				}
+			}
+
+			// Cria um novo calculo de expressão
+			BlankExpression exp = new BlankExpression(val1, val2, op);
+
+			// Substitui na linha a expressão pelo resultado
+			line = line.replace(rawExpression, exp.result().toString());
+		}
+
+		logicOpMatcher = logicOpIdentifier.matcher(line); // Prepara a busca para + e -
+		if (logicOpMatcher.find()) {
+			// Guarda a expressão encontrada para ser substituída mais tarde
+			String rawExpression = logicOpMatcher.toMatchResult().group();
 			String[] analysis = rawExpression.split(operationIdentifier.toString());
 
 			// Identifica a operação realizada
