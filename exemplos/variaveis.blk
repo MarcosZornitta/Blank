@@ -1,6 +1,6 @@
 var a
 var b
-var c
+var c = 99
 
 a = 10
 show a
@@ -8,9 +8,4 @@ a = 20.0
 show a
 b = a
 show b
-
-c = 2 * 3
-show c
-
-c = a + b
 show c
