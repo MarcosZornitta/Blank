@@ -46,7 +46,8 @@ public class BlankInterpreter
 		Pattern showIdentifier        = Pattern.compile("\\bshow\\W+"); // Identifica "show"
 		Pattern sumSubIdentifier      = Pattern.compile("\\w+(\\s+|\\b)(\\+|\\-)(\\s+|\\b)\\w+"); // Identifica "+" ou "-"
 		Pattern divMultIdentifier     = Pattern.compile("\\w+(\\s+|\\b)(\\*|\\/|\\%)(\\s+|\\b)\\w+"); // Identifica "*", "/" ou "%"
-		Pattern operationIdentifier   = Pattern.compile("(\\s+|\\b)(\\*|\\/|\\%|\\+|\\-|\\<|\\>)(\\s+|\\b)"); // Identifica uma operação (+, -, /, *, %, >, <, >=, ==, ...)
+		Pattern logicOpIdentifier     = Pattern.compile("\\w+(\\s+|\\b)(\\<|\\>|\\>\\=|\\<\\=|\\=\\=|\\!\\=)(\\s+|\\b)\\w+"); // Identifica operações lógicas >, <, ==...
+		Pattern operationIdentifier   = Pattern.compile("(\\s+|\\b)(\\*|\\/|\\%|\\+|\\-|\\<|\\>|\\>\\=|\\<\\=|\\=\\=|\\!\\=)(\\s+|\\b)"); // Identifica uma operação (+, -, /, *, %, >, <, >=, ==, ...)
 		
 		/**
 		 *	Matchers
@@ -166,7 +167,8 @@ public class BlankInterpreter
 
 		attributionMatcher = attributionIdentifier.matcher(line); // Prepara a busca para token "="
 		if (attributionMatcher.find()) {
-			String[] analysis = line.split("\\=");
+			String rawAttribuition = attributionMatcher.toMatchResult().group();
+			String[] analysis = rawAttribuition.split("(\\s+|\\b)(\\=)(\\s+|\\b)");
 			String item  = analysis[0].trim();
 			String value = analysis[1].trim();
 
