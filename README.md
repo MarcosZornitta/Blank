@@ -6,5 +6,5 @@ The Blank Interpreter is a language interpreter created in JAVA as exercise of P
 
 ## Creating JAR File
 
-Use the following code at the "fonte" folder: <br/>
-`jar -cmvf manifest.txt Blank.jar *.class blank/lang`
+Use the following code at the root folder: <br/>
+`jar -cmfv fonte/manifest.txt Blank.jar fonte/*.class fonte/blank/lang`
