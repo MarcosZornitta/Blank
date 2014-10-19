@@ -16,6 +16,61 @@ public class BlankInterpreter
 	BlankScope mainScope = new BlankScope("main");
 
 	/**
+	 *	Identifiers
+	 *	São os RegEx identificadores de cada parametro da linguagem
+	 */
+	private final Pattern varIdentifier         = Pattern.compile("\\bvar\\W+"); // Identifica "var"
+	private final Pattern paramIdentifier       = Pattern.compile("(\\w+|\\.+)+"); // Identifica um parametro
+	private final Pattern attributionIdentifier = Pattern.compile("\\w+(\\s+|\\b)\\=(\\s+|\\b)\\w+"); // Identifica "="
+	private final Pattern showIdentifier        = Pattern.compile("\\bshow\\W+"); // Identifica "show"
+	private final Pattern sumSubIdentifier      = Pattern.compile("\\w+(\\s+|\\b)(\\+|\\-)(\\s+|\\b)\\w+"); // Identifica "+" ou "-"
+	private final Pattern divMultIdentifier     = Pattern.compile("\\w+(\\s+|\\b)(\\*|\\/|\\%)(\\s+|\\b)\\w+"); // Identifica "*", "/" ou "%"
+	private final Pattern logicOpIdentifier     = Pattern.compile("\\w+(\\s+|\\b)(\\<|\\>|\\>\\=|\\<\\=|\\=\\=|\\!\\=)(\\s+|\\b)\\w+"); // Identifica operações lógicas >, <
+	private final Pattern operationIdentifier   = Pattern.compile("(\\s+|\\b)(\\*|\\/|\\%|\\+|\\-|\\<|\\>|\\>\\=|\\<\\=|\\=\\=|\\!\\=)(\\s+|\\b)"); // Identifica uma operação (+, -, /, *, %, >, <, >=, ==, ...)
+
+	private BlankExpression evalExpression(String rawExpression) throws Exception
+	{
+		BlankVar var; // variavel auxiliar para guardar uma BlankVar
+		String[] analysis = rawExpression.split(operationIdentifier.toString());
+
+		// Identifica a operação realizada
+		Matcher operationMatcher = operationIdentifier.matcher(rawExpression);
+		operationMatcher.find();
+		String op   = operationMatcher.toMatchResult().group().trim();
+		String val1 = analysis[0].trim();
+		String val2 = analysis[1].trim();
+
+		// Pega o primeiro valor
+		Matcher paramMatcher = paramIdentifier.matcher(val1);
+		if (paramMatcher.find()) {
+			String opValue1 = paramMatcher.toMatchResult().group();
+
+			if (mainScope.hasVariable(opValue1) >= 0) { // verifica se é uma variavel
+				var = mainScope.getVariable(opValue1);
+				val1 = var.getValue();
+			} else {
+				val1 = opValue1;
+			}
+		}
+
+		// Encontra o segundo valor
+		paramMatcher = paramIdentifier.matcher(val2);
+		if (paramMatcher.find()) {
+			String opValue2 = paramMatcher.toMatchResult().group();
+
+			if (mainScope.hasVariable(opValue2) >= 0) { // verifica se é uma variavel
+				var = mainScope.getVariable(opValue2);
+				val2 = var.getValue();
+			} else {
+				val2 = opValue2;
+			}
+		}
+
+		// Cria um novo calculo de expressão
+		return (new BlankExpression(val1, val2, op));
+	}
+
+	/**
 	 *	A função principal, responsável por interpretar e executar as ações contidas na linha
 	 *	@param  String line        A linha para ser interpretada
 	 *	@param  int    lineNumber  A identificação da linha atual
@@ -35,19 +90,6 @@ public class BlankInterpreter
 			// Substitui na linha a expressão pelo resultado
 			line = line.replace(commentSection, "");
 		}
-
-		/**
-		 *	Identifiers
-		 *	São os RegEx identificadores de cada parametro da linguagem
-		 */
-		Pattern varIdentifier         = Pattern.compile("\\bvar\\W+"); // Identifica "var"
-		Pattern paramIdentifier       = Pattern.compile("(\\w+|\\.+)+"); // Identifica um parametro
-		Pattern attributionIdentifier = Pattern.compile("\\w+(\\s+|\\b)\\=(\\s+|\\b)\\w+"); // Identifica "="
-		Pattern showIdentifier        = Pattern.compile("\\bshow\\W+"); // Identifica "show"
-		Pattern sumSubIdentifier      = Pattern.compile("\\w+(\\s+|\\b)(\\+|\\-)(\\s+|\\b)\\w+"); // Identifica "+" ou "-"
-		Pattern divMultIdentifier     = Pattern.compile("\\w+(\\s+|\\b)(\\*|\\/|\\%)(\\s+|\\b)\\w+"); // Identifica "*", "/" ou "%"
-		Pattern logicOpIdentifier     = Pattern.compile("\\w+(\\s+|\\b)(\\<|\\>|\\>\\=|\\<\\=|\\=\\=|\\!\\=)(\\s+|\\b)\\w+"); // Identifica operações lógicas >, <, ==...
-		Pattern operationIdentifier   = Pattern.compile("(\\s+|\\b)(\\*|\\/|\\%|\\+|\\-|\\<|\\>|\\>\\=|\\<\\=|\\=\\=|\\!\\=)(\\s+|\\b)"); // Identifica uma operação (+, -, /, *, %, >, <, >=, ==, ...)
 		
 		/**
 		 *	Matchers
@@ -78,43 +120,8 @@ public class BlankInterpreter
 		if (divMultMatcher.find()) {
 			// Guarda a expressão encontrada para ser substituída mais tarde
 			String rawExpression = divMultMatcher.toMatchResult().group();
-			String[] analysis = rawExpression.split(operationIdentifier.toString());
 
-			// Identifica a operação realizada
-			operationMatcher = operationIdentifier.matcher(rawExpression);
-			operationMatcher.find();
-			String op   = operationMatcher.toMatchResult().group().trim();
-			String val1 = analysis[0].trim();
-			String val2 = analysis[1].trim();
-
-			// Pega o primeiro valor
-			paramMatcher = paramIdentifier.matcher(val1);
-			if (paramMatcher.find()) {
-				String opValue1 = paramMatcher.toMatchResult().group();
-
-				if (mainScope.hasVariable(opValue1) >= 0) { // verifica se é uma variavel
-					var = mainScope.getVariable(opValue1);
-					val1 = var.getValue();
-				} else {
-					val1 = opValue1;
-				}
-			}
-
-			// Encontra o segundo valor
-			paramMatcher = paramIdentifier.matcher(val2);
-			if (paramMatcher.find()) {
-				String opValue2 = paramMatcher.toMatchResult().group();
-
-				if (mainScope.hasVariable(opValue2) >= 0) { // verifica se é uma variavel
-					var = mainScope.getVariable(opValue2);
-					val2 = var.getValue();
-				} else {
-					val2 = opValue2;
-				}
-			}
-
-			// Cria um novo calculo de expressão
-			BlankExpression exp = new BlankExpression(val1, val2, op);
+			BlankExpression exp = this.evalExpression(rawExpression);
 
 			// Substitui na linha a expressão pelo resultado
 			line = line.replace(rawExpression, exp.result().toString());
@@ -124,43 +131,8 @@ public class BlankInterpreter
 		if (sumSubMatcher.find()) {
 			// Guarda a expressão encontrada para ser substituída mais tarde
 			String rawExpression = sumSubMatcher.toMatchResult().group();
-			String[] analysis = rawExpression.split(operationIdentifier.toString());
 
-			// Identifica a operação realizada
-			operationMatcher = operationIdentifier.matcher(rawExpression);
-			operationMatcher.find();
-			String op   = operationMatcher.toMatchResult().group().trim();
-			String val1 = analysis[0].trim();
-			String val2 = analysis[1].trim();
-
-			// Pega o primeiro valor
-			paramMatcher = paramIdentifier.matcher(val1);
-			if (paramMatcher.find()) {
-				String opValue1 = paramMatcher.toMatchResult().group();
-
-				if (mainScope.hasVariable(opValue1) >= 0) { // verifica se é uma variavel
-					var = mainScope.getVariable(opValue1);
-					val1 = var.getValue();
-				} else {
-					val1 = opValue1;
-				}
-			}
-
-			// Encontra o segundo valor
-			paramMatcher = paramIdentifier.matcher(val2);
-			if (paramMatcher.find()) {
-				String opValue2 = paramMatcher.toMatchResult().group();
-
-				if (mainScope.hasVariable(opValue2) >= 0) { // verifica se é uma variavel
-					var = mainScope.getVariable(opValue2);
-					val2 = var.getValue();
-				} else {
-					val2 = opValue2;
-				}
-			}
-
-			// Cria um novo calculo de expressão
-			BlankExpression exp = new BlankExpression(val1, val2, op);
+			BlankExpression exp = this.evalExpression(rawExpression);
 
 			// Substitui na linha a expressão pelo resultado
 			line = line.replace(rawExpression, exp.result().toString());
@@ -170,43 +142,8 @@ public class BlankInterpreter
 		if (logicOpMatcher.find()) {
 			// Guarda a expressão encontrada para ser substituída mais tarde
 			String rawExpression = logicOpMatcher.toMatchResult().group();
-			String[] analysis = rawExpression.split(operationIdentifier.toString());
-
-			// Identifica a operação realizada
-			operationMatcher = operationIdentifier.matcher(rawExpression);
-			operationMatcher.find();
-			String op   = operationMatcher.toMatchResult().group().trim();
-			String val1 = analysis[0].trim();
-			String val2 = analysis[1].trim();
-
-			// Pega o primeiro valor
-			paramMatcher = paramIdentifier.matcher(val1);
-			if (paramMatcher.find()) {
-				String opValue1 = paramMatcher.toMatchResult().group();
-
-				if (mainScope.hasVariable(opValue1) >= 0) { // verifica se é uma variavel
-					var = mainScope.getVariable(opValue1);
-					val1 = var.getValue();
-				} else {
-					val1 = opValue1;
-				}
-			}
-
-			// Encontra o segundo valor
-			paramMatcher = paramIdentifier.matcher(val2);
-			if (paramMatcher.find()) {
-				String opValue2 = paramMatcher.toMatchResult().group();
-
-				if (mainScope.hasVariable(opValue2) >= 0) { // verifica se é uma variavel
-					var = mainScope.getVariable(opValue2);
-					val2 = var.getValue();
-				} else {
-					val2 = opValue2;
-				}
-			}
-
-			// Cria um novo calculo de expressão
-			BlankExpression exp = new BlankExpression(val1, val2, op);
+			
+			BlankExpression exp = this.evalExpression(rawExpression);
 
 			// Substitui na linha a expressão pelo resultado
 			line = line.replace(rawExpression, exp.result().toString());
