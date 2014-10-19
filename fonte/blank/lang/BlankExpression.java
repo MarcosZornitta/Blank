@@ -17,7 +17,7 @@ class BlankExpression
 
 	private float param1, param2;
 	private String op;
-	private float result = null;
+	private Float result = null;
 
 	public BlankExpression(String param1, String param2, String op)
 	{
@@ -44,10 +44,13 @@ class BlankExpression
 	public float getParam1() { return this.param1; }
 	public float getParam2() { return this.param2; }
 
-	public float getOp() { return this.op; }
+	public String getOp() { return this.op; }
 
-	public float calculate() throws Exception
+	public void calculate() throws Exception
 	{
+		// Variável auxiliar
+		Boolean boolResult;
+
 		switch (op) {
 			case OP_SUM:
 				result = param1 + param2;
@@ -66,32 +69,32 @@ class BlankExpression
 				break;
 
 			case OP_GTR:
-				boolean boolResult = param1 > param2;
+				boolResult = param1 > param2;
 				result = boolResult.toString() == "true" ? 1f : 0f;
 				break;
 
 			case OP_LWR:
-				boolean boolResult = param1 < param2;
+				boolResult = param1 < param2;
 				result = boolResult.toString() == "true" ? 1f : 0f;
 				break;
 
 			case OP_GTE:
-				boolean boolResult = param1 >= param2;
+				boolResult = param1 >= param2;
 				result = boolResult.toString() == "true" ? 1f : 0f;
 				break;
 
 			case OP_LWE:
-				boolean boolResult = param1 <= param2;
+				boolResult = param1 <= param2;
 				result = boolResult.toString() == "true" ? 1f : 0f;
 				break;
 
 			case OP_EQL:
-				boolean boolResult = param1 == param2;
+				boolResult = param1 == param2;
 				result = boolResult.toString() == "true" ? 1f : 0f;
 				break;
 
 			case OP_DIF:
-				boolean boolResult = param1 != param2;
+				boolResult = param1 != param2;
 				result = boolResult.toString() == "true" ? 1f : 0f;
 				break;
 
@@ -100,7 +103,7 @@ class BlankExpression
 		}
 	}
 
-	public float result()
+	public Float result() throws Exception
 	{
 		if (result == null) this.calculate();
 

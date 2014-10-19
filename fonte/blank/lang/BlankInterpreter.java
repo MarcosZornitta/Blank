@@ -1,3 +1,11 @@
+/**
+ *	BlankInterpreter
+ *
+ *	O core do interpretador da Linguagem Blank
+ *	Essa classe faz uso pesado de RegEx para a busca de tokens e
+ *	da classe Matcher para identificação de tokens.
+ */
+
 package blank.lang;
 
 import java.util.*;
@@ -6,11 +14,6 @@ import java.util.regex.*;
 public class BlankInterpreter
 {
 	BlankScope mainScope = new BlankScope("main");
-
-	private boolean isNotReservedWord(String subject)
-	{
-		return false;
-	}
 
 	/**
 	 *	A função principal, responsável por interpretar e executar as ações contidas na linha
@@ -58,6 +61,50 @@ public class BlankInterpreter
 			}
 		}
 
+		// Encontra operações de *, / e %
+		if (divMultMatcher.find()) {
+			// Guarda a expressão encontrada para ser substituída mais tarde
+			String rawExpression = divMultMatcher.toMatchResult().group();
+			String[] analysis = line.split("(\\b|\\s+)(\\*|\\/|\\%)(\\b|\\s+)");
+
+			// Identifica a operação realizada
+			String op   = (divMultIdentifier.matcher(line).toMatchResult().group());
+			String val1 = analysis[0].trim();
+			String val2 = analysis[1].trim();
+
+			// Pega o primeiro valor
+			paramMatcher = paramIdentifier.matcher(val1);
+			if (paramMatcher.find()) {
+				String opValue1 = paramMatcher.toMatchResult().group();
+
+				if (mainScope.hasVariable(opValue1) >= 0) { // verifica se é uma variavel
+					var = mainScope.getVariable(opValue1);
+					val1 = var.getValue();
+				} else {
+					val1 = opValue1;
+				}
+			}
+
+			// Encontra o segundo valor
+			paramMatcher = paramIdentifier.matcher(val2);
+			if (paramMatcher.find()) {
+				String opValue2 = paramMatcher.toMatchResult().group();
+
+				if (mainScope.hasVariable(opValue2) >= 0) { // verifica se é uma variavel
+					var = mainScope.getVariable(opValue2);
+					val2 = var.getValue();
+				} else {
+					val2 = opValue2;
+				}
+			}
+
+			// Cria um novo calculo de expressão
+			BlankExpression exp = new BlankExpression(val1, val2, op);
+
+			// Substitui na linha a expressão pelo resultado
+			line = line.replace(rawExpression, exp.result().toString());
+		}
+
 		// Encontra "="
 		if (attributionMatcher.find()) {
 			String[] analysis = line.split("\\=");
@@ -83,7 +130,7 @@ public class BlankInterpreter
 
 				if (mainScope.hasVariable(varValue) >= 0) { // Checa se o valor é uma variavel já definida
 					// encontra a variavel e atribui o valor da outra variavel á esta
-					var.setValue(mainScope.getVariable(varName).getValue());
+					var.setValue(mainScope.getVariable(varValue).getValue());
 				} else {
 					var.setValue(varValue); // Atribui o valor identificado
 				}
