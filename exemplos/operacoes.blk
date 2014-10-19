@@ -1,7 +1,20 @@
 var a
 a = 10 + 10
-show a
+show a // mostra na tela: 20
 
 var b
 b = a * 20
-show b
+show b // mostra na tela: 400
+
+var c
+c = 1 < 2
+show c // mostra na tela: 1
+
+c = 10 == 10
+show c // mostra na tela: 1
+
+c = 20 != 20
+show c // mostra na tela: 0
+
+c = a == b
+show c // mostra na tela: 0
