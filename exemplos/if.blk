@@ -1,0 +1,25 @@
+var a = 1
+var b = 2
+var c = 3
+
+if (a == 1)
+	show a
+else
+	show b
+endif
+
+if (a != 1)
+	show b
+else
+	show a
+endif
+
+if (b < a)
+	show a
+else
+	if (a == 1)
+		show c
+	endif
+endif
+
+show c
