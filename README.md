@@ -12,9 +12,9 @@ At the root folder:
 ## Creating JAR File
 
 Use the following code at the root folder: <br/>
-`jar -cmfv fonte/manifest.txt Blank.jar fonte/*.class fonte/blank/lang`
+`jar -cmfv fonte/manifest.txt Blank.jar fonte/*.class fonte/blank/lang/*.class`
 
 ## Running
 
-The Blank Interpreter needs a file with Blank Instructions to work. You can use any on the `/exemplos` folder
-`java -jar Blank.jar {file}`
+The Blank Interpreter needs a file with Blank Instructions to work. You can use any on the `/exemplos` folder. Use the following command: <br />
+`java Blank {file}`
