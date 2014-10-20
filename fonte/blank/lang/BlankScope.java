@@ -1,3 +1,7 @@
+/**
+ *	Para futuras implementações de escopo.
+ *	Funciona como escopo de função.
+ */
 package blank.lang;
 
 import java.util.*;
