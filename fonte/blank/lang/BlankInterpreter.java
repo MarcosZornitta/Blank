@@ -16,13 +16,16 @@ public class BlankInterpreter
 	BlankScope mainScope = new BlankScope("main");
 
 	/**
-	 *	Caso algum resultado do if tenha dado falso essa variavel
-	 *	deve ser setada como verdadeira, entao o intepretador
-	 *	ignorará as linhas até encontrar o final da instrução do if
+	 *	Flags para ignorar baseado em IF
 	 */
-	private boolean ignoreUntilNextEndIf = false;
-	private boolean ignoreUntilNextElse  = false;
-	private boolean ignoreNextElse       = false;
+	private boolean ignoreUntilNextEndIf = false; // Ignora o bloco até o próximo endif
+	private boolean ignoreUntilNextElse  = false; // Ignora o bloco até o próximo else
+	private boolean ignoreNextElse       = false; // Ignora o próximo bloco else
+	private boolean ignoreNextLoop       = false; // Ignora o próximo bloco de loop
+	private boolean insideLoop           = false; // Verifica se está dentro de um loop
+	private boolean ignoreUntilNextEndloop = false; // Ignora até encontrar um endloop
+
+	Stack<Integer> whileStart = new Stack<Integer>();
 
 	/**
 	 *	Identifiers
@@ -39,13 +42,31 @@ public class BlankInterpreter
 	private final Pattern ifIdentifier          = Pattern.compile("if(\\s+|\\b)\\((\\s+|\\b)(\\d|\\.)+(\\s+|\\b)\\)"); // Identifica "if ()"
 	private final Pattern elseIdentifier        = Pattern.compile("(\\W|\\b)else(\\W|\\b)"); // Identifica "else"
 	private final Pattern endifIdentifier       = Pattern.compile("(\\W|\\b)endif(\\W|\\b)"); // Identifica "endif"
-	private final Pattern loopIdentifier        = Pattern.compile("(\\W|\\b)loop(\\s+|\\b)\\((\\s+|\\b)\\d(\\s+|\\b)\\)"); // Identifica "loop ()"
-	private final Pattern parenthesisIdentifier = Pattern.compile("\\([\\s\\S]+\\)"); // Identifica "if ()"
+	private final Pattern loopIdentifier        = Pattern.compile("(\\W|\\b)loop(\\s+|\\b)\\((\\s+|\\b)(\\d|\\.)+(\\s+|\\b)\\)"); // Identifica "loop ()"
+	private final Pattern endloopIdentifier     = Pattern.compile("(\\W|\\b)endloop(\\W|\\b)"); // Identifica "endif"
+	private final Pattern parenthesisIdentifier = Pattern.compile("\\([\\s\\S]+\\)"); // Identifica "(conteudo)"
 
 	private boolean shouldIgnoreLine(String line)
 	{
-		Matcher elseMatcher  = elseIdentifier.matcher(line);
-		Matcher endIfMatcher = endifIdentifier.matcher(line);
+		Matcher elseMatcher    = elseIdentifier.matcher(line);
+		Matcher endIfMatcher   = endifIdentifier.matcher(line);
+		Matcher loopMatcher    = loopIdentifier.matcher(line);
+		Matcher endloopMatcher = endloopIdentifier.matcher(line);
+
+		if (this.ignoreNextLoop) {
+			if (loopMatcher.find()) {
+				this.ignoreNextLoop = false;
+				this.ignoreUntilNextEndloop = true;
+				return true;
+			}
+		}
+
+		if (this.ignoreUntilNextEndloop) {
+			if (endloopMatcher.find()) {
+				this.ignoreUntilNextEndloop = false;
+			}
+			return true;
+		}
 
 		if (this.ignoreUntilNextElse) {
 			if (elseMatcher.find()) {
@@ -158,6 +179,8 @@ public class BlankInterpreter
 		Matcher operationMatcher;
 		Matcher ifMatcher;
 		Matcher parenthesisMatcher;
+		Matcher loopMatcher;
+		Matcher endloopMatcher;
 
 		varMatcher = varIdentifier.matcher(line); // Prepara a verificação se existe o token var
 		if (varMatcher.find()) {
@@ -267,6 +290,52 @@ public class BlankInterpreter
 				this.ignoreUntilNextElse = true;
 			else
 				this.ignoreNextElse = true;
+		}
+
+		loopMatcher = loopIdentifier.matcher(line);
+		if (loopMatcher.find()) {
+			String rawLoop = loopMatcher.toMatchResult().group();
+
+			parenthesisMatcher = parenthesisIdentifier.matcher(rawLoop);
+			parenthesisMatcher.find();
+			String loopParenthesis = parenthesisMatcher.toMatchResult().group();
+
+			paramMatcher = paramIdentifier.matcher(loopParenthesis);
+			paramMatcher.find();
+			String loopResult = paramMatcher.toMatchResult().group();
+
+			Float loopResultValue;
+
+			/**
+			 *	Á esse ponto o interpretador já deve ter substituído na linha
+			 *	o valor-resultado da operação dentro do if, então é somente um digito que está
+			 *	ali presente.
+			 */
+			if (mainScope.hasVariable(loopResult) >= 0) { // Checa se o valor é uma variavel já definida
+				// encontra a variavel e atribui o valor da outra variavel á esta
+				loopResultValue = Float.parseFloat(mainScope.getVariable(loopResult).getValue());
+			} else {
+				loopResultValue = Float.parseFloat(loopResult); // Atribui o valor identificado
+			}
+
+			if (loopResultValue == 0) {
+				if (this.insideLoop) whileStart.pop();
+				this.ignoreNextLoop = true;
+				this.ignoreUntilNextEndloop = true;
+			} else {
+				this.insideLoop = true;
+				whileStart.push(lineNumber);
+			}
+		}
+
+		endloopMatcher = endloopIdentifier.matcher(line);
+		if (endloopMatcher.find()) {
+			if (this.insideLoop) {
+				this.ignoreNextLoop = true;
+				return whileStart.peek();
+			} else {
+				throw new Exception("endloop without being in a loop.");
+			}
 		}
 
 		showMatcher = showIdentifier.matcher(line); // Prepara a busca para o token show
