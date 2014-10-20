@@ -1,0 +1,11 @@
+var abacate = 0
+var nothing = 34
+
+loop (1 > 10)
+	show nothing
+endloop
+
+loop (abacate < 10)
+	show abacate
+	abacate = abacate + 1
+endloop
