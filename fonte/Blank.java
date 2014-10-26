@@ -21,7 +21,7 @@ class Blank
 	{
 		int lineNumber = 0;
 		BlankInterpreter interpreter = new BlankInterpreter();
-		List<String> lines; // Buffer de Linhas
+		List<String> lines = null; // Buffer de Linhas
 
 		try {
 			// Cria um buffer das linhas em uma lista
