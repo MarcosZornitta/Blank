@@ -4,7 +4,7 @@
  *	Interpretador da linguagem "Blank"
  *
  *	@see https://github.com/MarcosZornitta/Blank
- *	@author Gabriel Henrique Rudey (@whothey)
+ *	@author Gabriel Henrique Rudey (@whothey) | Marcos Alexandre Zornitta Ferreira
  *	@version Alpha
  */
 
@@ -19,19 +19,16 @@ class Blank
 {
 	public static void main(String[] args) throws Exception
 	{
-		File f = null;
-		Scanner s = null;
 		int lineNumber = 0;
 		BlankInterpreter interpreter = new BlankInterpreter();
+		List<String> lines; // Buffer de Linhas
 
 		try {
-			f = new File(args[0]);
+			// Cria um buffer das linhas em uma lista
+			lines = Files.readAllLines(Paths.get(args[0]), Charset.defaultCharset());
 		} catch (ArrayIndexOutOfBoundsException e) {
 			System.out.println("Não foi possível ler o arquivo: " + (args.length > 0 ? args[0] : "(desconhecido)"));
 		}
-
-		// Cria um buffer das linhas em uma lista
-		List<String> lines = Files.readAllLines(Paths.get(args[0]), Charset.defaultCharset());
 
 		/**
 		 *	O interpretador e todas as suas mecânicas.
