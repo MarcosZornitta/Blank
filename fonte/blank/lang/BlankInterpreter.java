@@ -34,7 +34,7 @@ public class BlankInterpreter
 	private final Pattern varIdentifier         = Pattern.compile("\\bvar\\W+"); // Identifica "var"
 	private final Pattern paramIdentifier       = Pattern.compile("(\\w+|\\.+)+"); // Identifica um parametro
 	private final Pattern attributionIdentifier = Pattern.compile("\\w+(\\s+|\\b)\\=(\\s+|\\b)\\w+"); // Identifica "="
-	private final Pattern showIdentifier        = Pattern.compile("\\bshow\\W+"); // Identifica "show"
+	private final Pattern showIdentifier        = Pattern.compile("\\bshow\\s+"); // Identifica "show"
 	private final Pattern sumSubIdentifier      = Pattern.compile("\\w+(\\s+|\\b)(\\+|\\-)(\\s+|\\b)\\w+"); // Identifica "+" ou "-"
 	private final Pattern divMultIdentifier     = Pattern.compile("\\w+(\\s+|\\b)(\\*|\\/|\\%)(\\s+|\\b)\\w+"); // Identifica "*", "/" ou "%"
 	private final Pattern logicOpIdentifier     = Pattern.compile("\\w+(\\s+|\\b)(\\<|\\>|\\>\\=|\\<\\=|\\=\\=|\\!\\=)(\\s+|\\b)\\w+"); // Identifica operações lógicas >, <
@@ -45,6 +45,7 @@ public class BlankInterpreter
 	private final Pattern loopIdentifier        = Pattern.compile("(\\W|\\b)loop(\\s+|\\b)\\((\\s+|\\b)(\\d|\\.)+(\\s+|\\b)\\)"); // Identifica "loop ()"
 	private final Pattern endloopIdentifier     = Pattern.compile("(\\W|\\b)endloop(\\W|\\b)"); // Identifica "endif"
 	private final Pattern parenthesisIdentifier = Pattern.compile("\\([\\s\\S]+\\)"); // Identifica "(conteudo)"
+	private final Pattern strIdentifier         = Pattern.compile("\\\"[\\s\\S]+\\\"");
 
 	private boolean shouldIgnoreLine(String line)
 	{
@@ -181,6 +182,7 @@ public class BlankInterpreter
 		Matcher parenthesisMatcher;
 		Matcher loopMatcher;
 		Matcher endloopMatcher;
+		Matcher strMatcher;
 
 		varMatcher = varIdentifier.matcher(line); // Prepara a verificação se existe o token var
 		if (varMatcher.find()) {
@@ -340,20 +342,28 @@ public class BlankInterpreter
 
 		showMatcher = showIdentifier.matcher(line); // Prepara a busca para o token show
 		if (showMatcher.find()) {
+			String printResult = "";
 			String analysis = line.split(showIdentifier.toString(), 2)[1]; // pega o que vem após "show"
+			strMatcher      = strIdentifier.matcher(analysis);
 			paramMatcher    = paramIdentifier.matcher(analysis);
 
-			if (paramMatcher.find()) {
-				String varName = paramMatcher.toMatchResult().group();
+			if (strMatcher.find()) {
+				printResult = strMatcher.toMatchResult().group().replace("\"", "");
+			} else {
+				if (paramMatcher.find()) {
+					String varName = paramMatcher.toMatchResult().group();
 
-				if (mainScope.hasVariable(varName) >= 0) {
-					var = mainScope.getVariable(varName);
-				} else {
-					throw new Exception("Variable " + varName + " is not set.");
+					if (mainScope.hasVariable(varName) >= 0) {
+						var = mainScope.getVariable(varName);
+					} else {
+						throw new Exception("Variable " + varName + " is not set.");
+					}
+
+					printResult = var.getValue();
 				}
-
-				System.out.println(var.getValue());
 			}
+
+			System.out.println(printResult);
 		}		
 
 		return ++lineNumber;
