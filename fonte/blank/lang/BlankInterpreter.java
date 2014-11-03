@@ -32,20 +32,22 @@ public class BlankInterpreter
 	 *	São os RegEx identificadores de cada parametro da linguagem
 	 */
 	private final Pattern varIdentifier         = Pattern.compile("\\bvar\\W+"); // Identifica "var"
+	private final Pattern numberIdentifier      = Pattern.compile("\\d*[\\S\\.]?\\d+");
 	private final Pattern paramIdentifier       = Pattern.compile("(\\w+|\\.+)+"); // Identifica um parametro
 	private final Pattern attributionIdentifier = Pattern.compile("\\w+(\\s+|\\b)\\=(\\s+|\\b)\\w+"); // Identifica "="
 	private final Pattern showIdentifier        = Pattern.compile("\\bshow\\s+"); // Identifica "show"
-	private final Pattern sumSubIdentifier      = Pattern.compile("\\w+(\\s+|\\b)(\\+|\\-)(\\s+|\\b)\\w+"); // Identifica "+" ou "-"
-	private final Pattern divMultIdentifier     = Pattern.compile("\\w+(\\s+|\\b)(\\*|\\/|\\%)(\\s+|\\b)\\w+"); // Identifica "*", "/" ou "%"
-	private final Pattern logicOpIdentifier     = Pattern.compile("\\w+(\\s+|\\b)(\\<|\\>|\\>\\=|\\<\\=|\\=\\=|\\!\\=)(\\s+|\\b)\\w+"); // Identifica operações lógicas >, <
+	private final Pattern sumSubIdentifier      = Pattern.compile("((\\w+|\\.+)+)(\\s+|\\b)(\\+|\\-)(\\s+|\\b)((\\w+|\\.+)+)"); // Identifica "+" ou "-"
+	private final Pattern divMultIdentifier     = Pattern.compile("((\\w+|\\.+)+)(\\s+|\\b)(\\*|\\/|\\%)(\\s+|\\b)((\\w+|\\.+)+)"); // Identifica "*", "/" ou "%"
+	private final Pattern logicOpIdentifier     = Pattern.compile("((\\w+|\\.+)+)(\\s+|\\b)(\\<|\\>|\\>\\=|\\<\\=|\\=\\=|\\!\\=)(\\s+|\\b)((\\w+|\\.+)+)"); // Identifica operações lógicas >, <
 	private final Pattern operationIdentifier   = Pattern.compile("(\\s+|\\b)(\\*|\\/|\\%|\\+|\\-|\\<|\\>|\\>\\=|\\<\\=|\\=\\=|\\!\\=)(\\s+|\\b)"); // Identifica uma operação (+, -, /, *, %, >, <, >=, ==, ...)
-	private final Pattern ifIdentifier          = Pattern.compile("if(\\s+|\\b)\\((\\s+|\\b)(\\d|\\.)+(\\s+|\\b)\\)"); // Identifica "if ()"
+	private final Pattern ifIdentifier          = Pattern.compile("if(\\s+|\\b)\\((\\s+|\\b)(\\d*[\\S\\.]?\\d+)(\\s+|\\b)\\)"); // Identifica "if ()"
 	private final Pattern elseIdentifier        = Pattern.compile("(\\W|\\b)else(\\W|\\b)"); // Identifica "else"
 	private final Pattern endifIdentifier       = Pattern.compile("(\\W|\\b)endif(\\W|\\b)"); // Identifica "endif"
-	private final Pattern loopIdentifier        = Pattern.compile("(\\W|\\b)loop(\\s+|\\b)\\((\\s+|\\b)(\\d|\\.)+(\\s+|\\b)\\)"); // Identifica "loop ()"
+	private final Pattern loopIdentifier        = Pattern.compile("(\\W|\\b)loop(\\s+|\\b)\\((\\s+|\\b)(\\d*[\\S\\.]?\\d+)(\\s+|\\b)\\)"); // Identifica "loop ()"
 	private final Pattern endloopIdentifier     = Pattern.compile("(\\W|\\b)endloop(\\W|\\b)"); // Identifica "endif"
 	private final Pattern parenthesisIdentifier = Pattern.compile("\\([\\s\\S]+\\)"); // Identifica "(conteudo)"
 	private final Pattern strIdentifier         = Pattern.compile("\\\"[\\s\\S]+\\\"");
+	private final Pattern commentIdentifier     = Pattern.compile("\\/\\/[\\s\\S]+");
 
 	private boolean shouldIgnoreLine(String line)
 	{
@@ -150,19 +152,9 @@ public class BlankInterpreter
 	 */
 	public int understand(String line, int lineNumber) throws Exception
 	{
-		if (this.shouldIgnoreLine(line)) return ++lineNumber;
-
-		// Set auxiliar variable to temporaly store variables
-		BlankVar var = null;
-
-		Pattern commentIdentifier = Pattern.compile("\\/\\/[\\s\\S]+");
-		Matcher commentMatcher    = commentIdentifier.matcher(line);
-
-		// Remove todos os comentários
-		if (commentMatcher.find()) {
-			String commentSection = commentMatcher.toMatchResult().group();
-			// Substitui na linha a expressão pelo resultado
-			line = line.replace(commentSection, "");
+		if (this.shouldIgnoreLine(line)) {
+			System.out.println("IGNORANDO");
+			return ++lineNumber;
 		}
 		
 		/**
@@ -172,6 +164,7 @@ public class BlankInterpreter
 		 */
 		Matcher varMatcher;
 		Matcher paramMatcher;
+		Matcher numberMatcher;
 		Matcher attributionMatcher;
 		Matcher showMatcher;
 		Matcher sumSubMatcher;
@@ -183,10 +176,25 @@ public class BlankInterpreter
 		Matcher loopMatcher;
 		Matcher endloopMatcher;
 		Matcher strMatcher;
+		Matcher commentMatcher;
+
+		// Variável auxiliar para guardar variaveis
+		BlankVar var = null;
+
+		// Procura por comentários
+		commentMatcher = commentIdentifier.matcher(line);
+
+		// Remove todos os comentários
+		if (commentMatcher.find()) { // Se encontrar comentários
+			String commentSection = commentMatcher.toMatchResult().group();
+			// Substitui na linha a expressão pelo resultado
+			line = line.replace(commentSection, "");
+		}
 
 		varMatcher = varIdentifier.matcher(line); // Prepara a verificação se existe o token var
 		if (varMatcher.find()) {
-			String analysis = line.split(varIdentifier.toString(), 2)[1]; // subject is after the var token
+			// Nome da variavél sempre está após o token, então por isso pega a posição [1]
+			String analysis = line.split(varIdentifier.toString(), 2)[1];
 			paramMatcher = paramIdentifier.matcher(analysis);
 
 			if (paramMatcher.find()) {
@@ -203,7 +211,7 @@ public class BlankInterpreter
 			BlankExpression exp = this.evalExpression(rawExpression);
 
 			// Substitui na linha a expressão pelo resultado
-			line = line.replace(rawExpression, exp.result().toString());
+			line = line.replace(rawExpression, " " + exp.result().toString() + " ");
 		}
 
 		sumSubMatcher = sumSubIdentifier.matcher(line); // Prepara a busca para + e -
@@ -214,7 +222,8 @@ public class BlankInterpreter
 			BlankExpression exp = this.evalExpression(rawExpression);
 
 			// Substitui na linha a expressão pelo resultado
-			line = line.replace(rawExpression, exp.result().toString());
+			// Também adiciona espações em volta do número para que não se una com outros números
+			line = line.replace(rawExpression, " " + exp.result().toString() + " ");
 		}
 
 		logicOpMatcher = logicOpIdentifier.matcher(line); // Prepara a busca para + e -
@@ -225,7 +234,7 @@ public class BlankInterpreter
 			BlankExpression exp = this.evalExpression(rawExpression);
 
 			// Substitui na linha a expressão pelo resultado
-			line = line.replace(rawExpression, exp.result().toString());
+			line = line.replace(rawExpression, " " + exp.result().toString() + " ");
 		}
 
 		attributionMatcher = attributionIdentifier.matcher(line); // Prepara a busca para token "="
@@ -346,9 +355,12 @@ public class BlankInterpreter
 			String analysis = line.split(showIdentifier.toString(), 2)[1]; // pega o que vem após "show"
 			strMatcher      = strIdentifier.matcher(analysis);
 			paramMatcher    = paramIdentifier.matcher(analysis);
+			numberMatcher   = numberIdentifier.matcher(analysis);
 
 			if (strMatcher.find()) {
 				printResult = strMatcher.toMatchResult().group().replace("\"", "");
+			} else if (numberMatcher.find()) {
+				printResult = numberMatcher.toMatchResult().group();
 			} else {
 				if (paramMatcher.find()) {
 					String varName = paramMatcher.toMatchResult().group();

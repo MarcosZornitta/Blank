@@ -26,7 +26,7 @@ class Blank
 		try {
 			// Cria um buffer das linhas em uma lista
 			lines = Files.readAllLines(Paths.get(args[0]), Charset.defaultCharset());
-		} catch (ArrayIndexOutOfBoundsException e) {
+		} catch (IOException e) {
 			System.out.println("Não foi possível ler o arquivo: " + (args.length > 0 ? args[0] : "(desconhecido)"));
 		}
 

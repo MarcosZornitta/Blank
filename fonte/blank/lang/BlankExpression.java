@@ -14,6 +14,7 @@ class BlankExpression
 	public static final String OP_LWE = "<=";
 	public static final String OP_EQL = "==";
 	public static final String OP_DIF = "!=";
+	public static final String OP_MOD = "%";
 
 	private float param1, param2;
 	private String op;
@@ -66,6 +67,10 @@ class BlankExpression
 
 			case OP_MUL:
 				result = param1 * param2;
+				break;
+
+			case OP_MOD:
+				result = param1 % param2;
 				break;
 
 			case OP_GTR:
