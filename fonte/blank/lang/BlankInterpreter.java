@@ -152,10 +152,7 @@ public class BlankInterpreter
 	 */
 	public int understand(String line, int lineNumber) throws Exception
 	{
-		if (this.shouldIgnoreLine(line)) {
-			System.out.println("IGNORANDO");
-			return ++lineNumber;
-		}
+		if (this.shouldIgnoreLine(line)) return ++lineNumber;
 		
 		/**
 		 *	Matchers
