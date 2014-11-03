@@ -1,1 +1,4 @@
 show "Hello World!"
+show 13.0
+show 15 + 2
+show 9

@@ -1,5 +1,6 @@
 var abacate = 0
 var nothing = 34
+var contagem = 10
 
 loop (1 > 10)
 	show nothing
@@ -8,4 +9,9 @@ endloop
 loop (abacate < 10)
 	show abacate
 	abacate = abacate + 1
+endloop
+
+loop (contagem > 0)
+	show "Vou ser mostrado 10 vezes!"
+	contagem = contagem - 1
 endloop
