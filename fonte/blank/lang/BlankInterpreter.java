@@ -142,22 +142,6 @@ public class BlankInterpreter
 		}
 
 		return false;
-		// if (this.ignoreUntilNextEndloop == true) {
-		// 	return true;
-		// }
-
-		// int whilePeek = loopStack.empty() ? 0 : loopStack.peek();
-		// int ifPeek    = ifStack.empty()   ? 0 : ifStack.peek();
-
-		// if (whilePeek > ifPeek) {
-		// 	if (this.shouldIgnoreLoop(line)) return true;
-		// 	if (this.shouldIgnoreIf(line))   return true;
-		// } else if (whilePeek < ifPeek) {
-		// 	if (this.shouldIgnoreIf(line))   return true;
-		// 	if (this.shouldIgnoreLoop(line)) return true;
-		// }
-
-		// return false;
 	}
 
 	private BlankExpression evalExpression(String rawExpression) throws Exception
@@ -260,7 +244,7 @@ public class BlankInterpreter
 		}
 
 		divMultMatcher = divMultIdentifier.matcher(line); // prepara a busca para operações de *, / e %
-		if (divMultMatcher.find()) {
+		while (divMultMatcher.find()) {
 			// Guarda a expressão encontrada para ser substituída mais tarde
 			String rawExpression = divMultMatcher.toMatchResult().group();
 
@@ -268,10 +252,13 @@ public class BlankInterpreter
 
 			// Substitui na linha a expressão pelo resultado
 			line = line.replace(rawExpression, " " + exp.result().toString() + " ");
+
+			// Atualiza a busca para resolver mais calculos na linha
+			divMultMatcher = divMultIdentifier.matcher(line);
 		}
 
 		sumSubMatcher = sumSubIdentifier.matcher(line); // Prepara a busca para + e -
-		if (sumSubMatcher.find()) {
+		while (sumSubMatcher.find()) {
 			// Guarda a expressão encontrada para ser substituída mais tarde
 			String rawExpression = sumSubMatcher.toMatchResult().group();
 
@@ -280,10 +267,13 @@ public class BlankInterpreter
 			// Substitui na linha a expressão pelo resultado
 			// Também adiciona espações em volta do número para que não se una com outros números
 			line = line.replace(rawExpression, " " + exp.result().toString() + " ");
+
+			// Atualiza a busca para encontrar mais calculos na linha
+			sumSubMatcher = sumSubIdentifier.matcher(line);
 		}
 
 		logicOpMatcher = logicOpIdentifier.matcher(line); // Prepara a busca para + e -
-		if (logicOpMatcher.find()) {
+		while (logicOpMatcher.find()) {
 			// Guarda a expressão encontrada para ser substituída mais tarde
 			String rawExpression = logicOpMatcher.toMatchResult().group();
 			
@@ -291,6 +281,9 @@ public class BlankInterpreter
 
 			// Substitui na linha a expressão pelo resultado
 			line = line.replace(rawExpression, " " + exp.result().toString() + " ");
+
+			// Atualiza a busca para resolver mais expressões na linha
+			logicOpMatcher = logicOpIdentifier.matcher(line);
 		}
 
 		attributionMatcher = attributionIdentifier.matcher(line); // Prepara a busca para token "="
@@ -402,27 +395,14 @@ public class BlankInterpreter
 				loopResultValue = Float.parseFloat(loopResult); // Atribui o valor identificado
 			}
 
-			if (loopResultValue == 0) {
-				return (fluxStack.pop().getEndingLine() + 1);
-			}
-
 			// Se o loop que está no topo, não é o mesmo da linha atual
 			if (fluxStack.empty() || fluxStack.peek().getStartingLine() != lineNumber) {
 				fluxStack.push(new BlankFlux(lineNumber, loopIdentifier, loopResultValue != 0)); // Empilha novo fluxo
 			}
 
-			// if (loopResultValue == 0) {
-			// 	if (! loopStack.empty()) loopStack.pop();
-			// 	this.ignoreUntilNextEndloop = true;
-			// } else {
-			// 	if (loopStack.empty()) {
-			// 		loopStack.push(lineNumber);
-			// 	} else {
-			// 		if (loopStack.peek() != lineNumber) {
-			// 			loopStack.push(lineNumber);
-			// 		}
-			// 	}
-			// }
+			if (loopResultValue == 0) {
+				return (fluxStack.pop().getEndingLine() + 1);
+			}
 		}
 
 		endloopMatcher = endloopIdentifier.matcher(line);
