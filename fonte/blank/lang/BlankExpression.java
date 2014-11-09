@@ -1,3 +1,10 @@
+/**
+ *	BlankExpression analisa as expressões e resolve-as á partir das operações pré-definidas.
+ *	Faz a analise de cada operação e retorna o valor de acordo com sua operação.
+ *	Se a operação deveria gerar um resultado booleano, então retorna 0.0 se o resultado for falso e
+ *	1.0 caso o valor seja verdadeiro.
+ */
+
 package blank.lang;
 
 import java.util.*;
