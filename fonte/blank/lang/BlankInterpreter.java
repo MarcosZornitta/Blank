@@ -297,7 +297,11 @@ public class BlankInterpreter
 			}
 
 			// Trata o valor proposto para atribuição
-			var.setValue(this.parseValue(value));
+			try {
+				var.setValue(this.parseValue(value));
+			} catch (Exception e) {
+				throw new BlankException(e.getMessage(), lineNumber, line);
+			}
 		}
 
 		ifMatcher = ifIdentifier.matcher(line);
@@ -408,30 +412,12 @@ public class BlankInterpreter
 			printArgs = analysis.split("(\\W|\\b)\\+(\\W|\\b)");
 
 			for (int i = 0; i < printArgs.length; i++) {
-				printResult += this.parseValue(printArgs[i]);
-				// strMatcher    = strIdentifier.matcher(printArgs[i]);
-				// paramMatcher  = paramIdentifier.matcher(printArgs[i]);
-				// numberMatcher = numberIdentifier.matcher(printArgs[i]);
-				
-				// if (strMatcher.find()) {
-				// 	printResult += strMatcher.toMatchResult().group().replace("\"", "");
-				// } else if (numberMatcher.find()) {
-				// 	printResult += numberMatcher.toMatchResult().group().trim();
-				// } else {
-				// 	if (paramMatcher.find()) {
-				// 		String varName = paramMatcher.toMatchResult().group();
-
-				// 		if (mainScope.hasVariable(varName) >= 0) {
-				// 			var = mainScope.getVariable(varName);
-				// 		} else {
-				// 			throw new BlankException("Variable " + varName + " is not set", lineNumber, line);
-				// 		}
-
-				// 		printResult += var.getValue();
-				// 	}
-				// }
+				try {
+					printResult += this.parseValue(printArgs[i]);
+				} catch (Exception e) {
+					throw new BlankException(e.getMessage(), lineNumber, line);
+				}
 			}
-
 
 			System.out.println(printResult);
 		}
