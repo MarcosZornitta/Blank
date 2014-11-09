@@ -40,8 +40,8 @@ public class BlankInterpreter
 	private final Pattern showIdentifier        = Pattern.compile("\\bshow\\s+"); // Identifica "show"
 	private final Pattern sumSubIdentifier      = Pattern.compile("((\\w+|\\.+)+)(\\s+|\\b)(\\+|\\-)(\\s+|\\b)((\\w+|\\.+)+)"); // Identifica "+" ou "-"
 	private final Pattern divMultIdentifier     = Pattern.compile("((\\w+|\\.+)+)(\\s+|\\b)(\\*|\\/|\\%)(\\s+|\\b)((\\w+|\\.+)+)"); // Identifica "*", "/" ou "%"
-	private final Pattern logicOpIdentifier     = Pattern.compile("((\\w+|\\.+)+)(\\s+|\\b)(\\<|\\>|\\>\\=|\\<\\=|\\=\\=|\\!\\=)(\\s+|\\b)((\\w+|\\.+)+)"); // Identifica operações lógicas >, <
-	private final Pattern operationIdentifier   = Pattern.compile("(\\s+|\\b)(\\*|\\/|\\%|\\+|\\-|\\<|\\>|\\>\\=|\\<\\=|\\=\\=|\\!\\=)(\\s+|\\b)"); // Identifica uma operação (+, -, /, *, %, >, <, >=, ==, ...)
+	private final Pattern logicOpIdentifier     = Pattern.compile("((\\w+|\\.+)+)(\\s+|\\b)(\\<|\\>|\\>\\=|\\<\\=|\\=\\=|\\!\\=|\\&\\&|\\|\\|)(\\s+|\\b)((\\w+|\\.+)+)"); // Identifica operações lógicas >, <
+	private final Pattern operationIdentifier   = Pattern.compile("(\\s+|\\b)(\\*|\\/|\\%|\\+|\\-|\\<|\\>|\\>\\=|\\<\\=|\\=\\=|\\!\\=|\\&\\&|\\|\\|)(\\s+|\\b)"); // Identifica uma operação (+, -, /, *, %, >, <, >=, ==, ...)
 	private final Pattern ifIdentifier          = Pattern.compile("if(\\s+|\\b)\\((\\s+|\\b)(\\d*[\\S\\.]?\\d+)(\\s+|\\b)\\)"); // Identifica "if ()"
 	private final Pattern elseIdentifier        = Pattern.compile("(\\W|\\b)else(\\W|\\b)"); // Identifica "else"
 	private final Pattern endifIdentifier       = Pattern.compile("(\\W|\\b)endif(\\W|\\b)"); // Identifica "endif"
