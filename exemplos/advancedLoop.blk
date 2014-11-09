@@ -1,0 +1,23 @@
+var a = 0
+var b = 0
+var c = 1
+
+loop (a < 10)
+	show "a:"
+	show a
+	loop (b < 2)
+		show "b"
+		b = b + 1
+		loop ( c     == 1)
+			show "c"
+			c = 0
+		endloop
+		c = 1
+	endloop
+	b = 0
+	a = a + 1
+endloop
+
+if (a == 10 && b == 0 && c == 1)
+	show "Estou funcionando corretamente!"
+endif
