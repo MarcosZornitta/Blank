@@ -15,18 +15,6 @@ public class BlankInterpreter
 {
 	BlankScope mainScope = new BlankScope("main");
 
-	/**
-	 *	Flags para ignorar baseado em IF
-	 */
-	private boolean ignoreUntilNextEndIf   = false; // Ignora o bloco até o próximo endif
-	private boolean ignoreUntilNextElse    = false; // Ignora o bloco até o próximo else
-	private boolean ignoreNextElse         = false; // Ignora o próximo bloco else
-	private boolean ignoreNextLoop         = false; // Ignora o próximo bloco de loop
-	private boolean insideLoop             = false; // Verifica se está dentro de um loop
-	private boolean ignoreUntilNextEndloop = false; // Ignora até encontrar um endloop
-
-	private Stack<Integer> loopStack = new Stack<Integer>();
-	private Stack<Integer> ifStack   = new Stack<Integer>();
 	private Stack<BlankFlux> fluxStack = new Stack<BlankFlux>();
 
 	/**
@@ -38,6 +26,7 @@ public class BlankInterpreter
 	private final Pattern paramIdentifier       = Pattern.compile("(\\w+|\\.+)+"); // Identifica um parametro
 	private final Pattern attributionIdentifier = Pattern.compile("\\w+(\\s+|\\b)\\=(\\s+|\\b)\\w+"); // Identifica "="
 	private final Pattern showIdentifier        = Pattern.compile("\\bshow\\s+"); // Identifica "show"
+	private final Pattern askIdentifier         = Pattern.compile("(\\W|\\b)ask(\\W|\\b)");
 	private final Pattern sumSubIdentifier      = Pattern.compile("((\\w+|\\.+)+)(\\s+|\\b)(\\+|\\-)(\\s+|\\b)((\\w+|\\.+)+)"); // Identifica "+" ou "-"
 	private final Pattern divMultIdentifier     = Pattern.compile("((\\w+|\\.+)+)(\\s+|\\b)(\\*|\\/|\\%)(\\s+|\\b)((\\w+|\\.+)+)"); // Identifica "*", "/" ou "%"
 	private final Pattern logicOpIdentifier     = Pattern.compile("((\\w+|\\.+)+)(\\s+|\\b)(\\<|\\>|\\>\\=|\\<\\=|\\=\\=|\\!\\=|\\&\\&|\\|\\|)(\\s+|\\b)((\\w+|\\.+)+)"); // Identifica operações lógicas >, <
@@ -151,6 +140,7 @@ public class BlankInterpreter
 		Matcher numberMatcher;
 		Matcher attributionMatcher;
 		Matcher showMatcher;
+		Matcher askMatcher;
 		Matcher sumSubMatcher;
 		Matcher divMultMatcher;
 		Matcher logicOpMatcher;
@@ -163,6 +153,8 @@ public class BlankInterpreter
 		Matcher strMatcher;
 		Matcher commentMatcher;
 		Matcher elseMatcher;
+
+		Scanner in = new Scanner(System.in);
 
 		// Variável auxiliar para guardar variaveis
 		BlankVar var = null;
@@ -179,7 +171,7 @@ public class BlankInterpreter
 
 		varMatcher = varIdentifier.matcher(line); // Prepara a verificação se existe o token var
 		if (varMatcher.find()) {
-			// Nome da variavél sempre está após o token, então por isso pega a posição [1]
+			// Nome da variavel sempre está após o token, então por isso pega a posição [1]
 			String analysis = line.split(varIdentifier.toString(), 2)[1];
 			paramMatcher = paramIdentifier.matcher(analysis);
 
@@ -187,6 +179,13 @@ public class BlankInterpreter
 				var = new BlankVar(paramMatcher.toMatchResult().group(), "");
 				mainScope.storeVariable(var);
 			}
+		}
+
+		// Input
+		askMatcher = askIdentifier.matcher(line);
+		if (askMatcher.find()) {
+			String rawAsk = askMatcher.toMatchResult().group();
+			line = line.replace(rawAsk, in.nextLine());
 		}
 
 		divMultMatcher = divMultIdentifier.matcher(line); // prepara a busca para operações de *, / e %
