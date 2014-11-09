@@ -10,6 +10,6 @@ class BlankException extends Exception
 {
 	public BlankException(String msg, int lineNumber, String line)
 	{
-		super(msg + " on line [" + lineNumber + "]: " + line);
+		super(msg + " on line [" + (lineNumber + 1) + "]: " + line);
 	}
 }
