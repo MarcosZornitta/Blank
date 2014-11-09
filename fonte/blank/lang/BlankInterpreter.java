@@ -31,11 +31,9 @@ public class BlankInterpreter
 	private final Pattern divMultIdentifier     = Pattern.compile("((\\w+|\\.+)+)(\\s+|\\b)(\\*|\\/|\\%)(\\s+|\\b)((\\w+|\\.+)+)"); // Identifica "*", "/" ou "%"
 	private final Pattern logicOpIdentifier     = Pattern.compile("((\\w+|\\.+)+)(\\s+|\\b)(\\<|\\>|\\>\\=|\\<\\=|\\=\\=|\\!\\=|\\&\\&|\\|\\|)(\\s+|\\b)((\\w+|\\.+)+)"); // Identifica operações lógicas >, <
 	private final Pattern operationIdentifier   = Pattern.compile("(\\s+|\\b)(\\*|\\/|\\%|\\+|\\-|\\<|\\>|\\>\\=|\\<\\=|\\=\\=|\\!\\=|\\&\\&|\\|\\|)(\\s+|\\b)"); // Identifica uma operação (+, -, /, *, %, >, <, >=, ==, ...)
-	// private final Pattern ifIdentifier          = Pattern.compile("if(\\s+|\\b)\\((\\s+|\\b)(\\d*[\\S\\.]?\\d+)(\\s+|\\b)\\)"); // Identifica "if ()"
 	private final Pattern ifIdentifier          = Pattern.compile("if(\\s+|\\b)\\((\\s+|\\b)([\\s\\S]+)(\\s+|\\b)\\)"); // Identifica "if ()"
 	private final Pattern elseIdentifier        = Pattern.compile("(\\W|\\b)else(\\W|\\b)"); // Identifica "else"
 	private final Pattern endifIdentifier       = Pattern.compile("(\\W|\\b)endif(\\W|\\b)"); // Identifica "endif"
-	// private final Pattern loopIdentifier        = Pattern.compile("(\\W|\\b)loop(\\s+|\\b)\\((\\s+|\\b)(\\d*[\\S\\.]?\\d+|((\\w+|\\.+)+))(\\s+|\\b)\\)"); // Identifica "loop ()"
 	private final Pattern loopIdentifier        = Pattern.compile("(\\W|\\b)loop(\\s+|\\b)\\((\\s+|\\b)([\\s\\S]+)(\\s+|\\b)\\)"); // Identifica "loop ()"
 	private final Pattern endloopIdentifier     = Pattern.compile("(\\W|\\b)endloop(\\W|\\b)"); // Identifica "endif"
 	private final Pattern parenthesisIdentifier = Pattern.compile("\\([\\s\\S]+\\)"); // Identifica "(conteudo)"
@@ -181,11 +179,23 @@ public class BlankInterpreter
 			}
 		}
 
-		// Input
+		// Ferramenta de leitura da entrada padrão
 		askMatcher = askIdentifier.matcher(line);
 		if (askMatcher.find()) {
+			String rawInput;
 			String rawAsk = askMatcher.toMatchResult().group();
-			line = line.replace(rawAsk, " " + in.nextLine() + " ");
+
+			rawInput = in.nextLine();
+
+			// Simplesmente substitui na linha com espaços apropriados para que o resto do
+			// interpretador decida o que fazer com o valor passado
+			try {
+				Float.parseFloat(rawInput);
+				line = line.replace(rawAsk, " " + in.nextLine() + " ");
+			} catch (Exception e) {
+				// Se não consegue converter em float, usa o valor como string
+				line = line.replace(rawAsk, " \"" + in.nextLine() + "\" ");
+			}
 		}
 
 		divMultMatcher = divMultIdentifier.matcher(line); // prepara a busca para operações de *, / e %
@@ -290,8 +300,7 @@ public class BlankInterpreter
 				ifResultValue = Float.parseFloat(ifResult); // Atribui o valor identificado
 			}
 
-			// Depois de todas as operações, identifica a linha inicial do if na pilha de ifs
-
+			// Depois de todas as operações, identifica a linha inicial do if na pilha de fluxo
 			// Se o loop que está no topo, não é o mesmo da linha atual
 			if (fluxStack.empty() || fluxStack.peek().getStartingLine() != lineNumber) {
 				fluxStack.push(new BlankFlux(lineNumber, endifIdentifier, ifResultValue != 0)); // Empilha novo fluxo
@@ -301,7 +310,7 @@ public class BlankInterpreter
 		elseMatcher = elseIdentifier.matcher(line);
 		if (elseMatcher.find()) {
 			if (fluxStack.empty()) {
-				throw new BlankException("There is no if for this else", lineNumber, line);
+				throw new BlankException("There is no \"if\" for this \"else\"", lineNumber, line);
 			} else {
 				fluxStack.peek().setResult(! fluxStack.peek().result()); // Inverte o estado do If
 			}
@@ -310,7 +319,7 @@ public class BlankInterpreter
 		endIfMatcher = endifIdentifier.matcher(line);
 		if (endIfMatcher.find()) {
 			if (fluxStack.empty()) {
-				throw new BlankException("There is no if for this endif", lineNumber, line);
+				throw new BlankException("There is no \"if\" for this \"endif\"", lineNumber, line);
 			} else {
 				fluxStack.pop();
 			}
