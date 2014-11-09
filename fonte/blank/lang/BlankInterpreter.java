@@ -185,7 +185,7 @@ public class BlankInterpreter
 		askMatcher = askIdentifier.matcher(line);
 		if (askMatcher.find()) {
 			String rawAsk = askMatcher.toMatchResult().group();
-			line = line.replace(rawAsk, in.nextLine());
+			line = line.replace(rawAsk, " " + in.nextLine() + " ");
 		}
 
 		divMultMatcher = divMultIdentifier.matcher(line); // prepara a busca para operações de *, / e %
