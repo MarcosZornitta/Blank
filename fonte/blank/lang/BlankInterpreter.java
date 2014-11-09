@@ -18,14 +18,16 @@ public class BlankInterpreter
 	/**
 	 *	Flags para ignorar baseado em IF
 	 */
-	private boolean ignoreUntilNextEndIf = false; // Ignora o bloco até o próximo endif
-	private boolean ignoreUntilNextElse  = false; // Ignora o bloco até o próximo else
-	private boolean ignoreNextElse       = false; // Ignora o próximo bloco else
-	private boolean ignoreNextLoop       = false; // Ignora o próximo bloco de loop
-	private boolean insideLoop           = false; // Verifica se está dentro de um loop
+	private boolean ignoreUntilNextEndIf   = false; // Ignora o bloco até o próximo endif
+	private boolean ignoreUntilNextElse    = false; // Ignora o bloco até o próximo else
+	private boolean ignoreNextElse         = false; // Ignora o próximo bloco else
+	private boolean ignoreNextLoop         = false; // Ignora o próximo bloco de loop
+	private boolean insideLoop             = false; // Verifica se está dentro de um loop
 	private boolean ignoreUntilNextEndloop = false; // Ignora até encontrar um endloop
 
-	Stack<Integer> whileStart = new Stack<Integer>();
+	private Stack<Integer> loopStack = new Stack<Integer>();
+	private Stack<Integer> ifStack   = new Stack<Integer>();
+	private Stack<BlankFlux> fluxStack = new Stack<BlankFlux>();
 
 	/**
 	 *	Identifiers
@@ -49,10 +51,49 @@ public class BlankInterpreter
 	private final Pattern strIdentifier         = Pattern.compile("\\\"[\\s\\S]+\\\"");
 	private final Pattern commentIdentifier     = Pattern.compile("\\/\\/[\\s\\S]+");
 
-	private boolean shouldIgnoreLine(String line)
+	private boolean shouldIgnoreIf(String line)
 	{
-		Matcher elseMatcher    = elseIdentifier.matcher(line);
-		Matcher endIfMatcher   = endifIdentifier.matcher(line);
+		Matcher elseMatcher  = elseIdentifier.matcher(line);
+		Matcher endIfMatcher = endifIdentifier.matcher(line);
+
+		if (this.ignoreUntilNextElse) {
+			if (elseMatcher.find()) {
+				this.ignoreUntilNextElse = false;
+				return false;
+			} else {
+				return true;
+			}
+		}
+
+		if (this.ignoreNextElse) {
+			if (elseMatcher.find()) {
+				this.ignoreNextElse       = false;
+				this.ignoreUntilNextEndIf = true;
+				return true;
+			} else if (endIfMatcher.find()) {
+				this.ignoreNextElse = false;
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+		if (this.ignoreUntilNextEndIf) {
+			if (endIfMatcher.find()) {
+				this.ignoreUntilNextElse  = false;
+				this.ignoreNextElse       = false;
+				this.ignoreUntilNextEndIf = false;
+				return true;
+			} else {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private boolean shouldIgnoreLoop(String line)
+	{
 		Matcher loopMatcher    = loopIdentifier.matcher(line);
 		Matcher endloopMatcher = endloopIdentifier.matcher(line);
 
@@ -71,35 +112,52 @@ public class BlankInterpreter
 			return true;
 		}
 
-		if (this.ignoreUntilNextElse) {
-			if (elseMatcher.find()) {
-				this.ignoreUntilNextElse = false;
-				return false;
-			} else {
-				return true;
-			}
-		}
+		return false;
+	}
 
-		if (this.ignoreNextElse) {
-			if (elseMatcher.find()) {
-				this.ignoreNextElse       = false;
-				this.ignoreUntilNextEndIf = true;
-				return true;
-			} else {
-				return false;
-			}
-		}
+	/**
+	 *	Verifica se deve ignorar a linha, trabalhando com seu conteúdo.
+	 */
+	private boolean shouldIgnoreLine(String line)
+	{
+		if (fluxStack.empty()) return false;
 
-		if (this.ignoreUntilNextEndIf) {
-			if (endIfMatcher.find()) {
-				this.ignoreUntilNextEndIf = false;
-				return true;
-			} else {
-				return true;
+		Matcher loopMatcher    = loopIdentifier.matcher(line);
+		Matcher endloopMatcher = endloopIdentifier.matcher(line);
+		Matcher endFluxMatcher = (fluxStack.peek().getEndFluxPattern().matcher(line));
+
+		// Enquanto o último resultado de Loop for falso
+		if (fluxStack.peek().result() == false) {
+			if (loopMatcher.find()) {
+				BlankFlux obsoleteLoop = new BlankFlux(0, loopIdentifier, false);
+				fluxStack.push(obsoleteLoop);
 			}
+
+			if (endFluxMatcher.find()) {
+				System.out.println("pop");
+				fluxStack.pop();
+			}
+
+			return true;
 		}
 
 		return false;
+		// if (this.ignoreUntilNextEndloop == true) {
+		// 	return true;
+		// }
+
+		// int whilePeek = loopStack.empty() ? 0 : loopStack.peek();
+		// int ifPeek    = ifStack.empty()   ? 0 : ifStack.peek();
+
+		// if (whilePeek > ifPeek) {
+		// 	if (this.shouldIgnoreLoop(line)) return true;
+		// 	if (this.shouldIgnoreIf(line))   return true;
+		// } else if (whilePeek < ifPeek) {
+		// 	if (this.shouldIgnoreIf(line))   return true;
+		// 	if (this.shouldIgnoreLoop(line)) return true;
+		// }
+
+		// return false;
 	}
 
 	private BlankExpression evalExpression(String rawExpression) throws Exception
@@ -169,6 +227,7 @@ public class BlankInterpreter
 		Matcher logicOpMatcher;
 		Matcher operationMatcher;
 		Matcher ifMatcher;
+		Matcher endIfMatcher;
 		Matcher parenthesisMatcher;
 		Matcher loopMatcher;
 		Matcher endloopMatcher;
@@ -293,11 +352,28 @@ public class BlankInterpreter
 				ifResultValue = Float.parseFloat(ifResult); // Atribui o valor identificado
 			}
 
+			// Depois de todas as operações, identifica a linha inicial do if na pilha de ifs
+
 			// Se o resultado for falso
-			if (ifResultValue == 0)
+			if (ifResultValue == 0) {
 				this.ignoreUntilNextElse = true;
-			else
+			} else {
+				if (ifStack.empty()) {
+					ifStack.push(lineNumber);
+				} else {
+					if (ifStack.peek() != lineNumber) ifStack.push(lineNumber);
+				}
 				this.ignoreNextElse = true;
+			}
+		}
+
+		endIfMatcher = endifIdentifier.matcher(line);
+		if (endIfMatcher.find()) {
+			if (ifStack.empty()) {
+				throw new Exception("There is no if for this endif");
+			} else {
+				ifStack.pop();
+			}
 		}
 
 		loopMatcher = loopIdentifier.matcher(line);
@@ -316,7 +392,7 @@ public class BlankInterpreter
 
 			/**
 			 *	Á esse ponto o interpretador já deve ter substituído na linha
-			 *	o valor-resultado da operação dentro do if, então é somente um digito que está
+			 *	o valor-resultado da operação dentro da expressão do loop, então é somente um digito que está
 			 *	ali presente.
 			 */
 			if (mainScope.hasVariable(loopResult) >= 0) { // Checa se o valor é uma variavel já definida
@@ -327,20 +403,33 @@ public class BlankInterpreter
 			}
 
 			if (loopResultValue == 0) {
-				if (this.insideLoop) whileStart.pop();
-				this.ignoreNextLoop = true;
-				this.ignoreUntilNextEndloop = true;
-			} else {
-				this.insideLoop = true;
-				whileStart.push(lineNumber);
+				return (fluxStack.pop().getEndingLine() + 1);
 			}
+
+			// Se o loop que está no topo, não é o mesmo da linha atual
+			if (fluxStack.empty() || fluxStack.peek().getStartingLine() != lineNumber) {
+				fluxStack.push(new BlankFlux(lineNumber, loopIdentifier, loopResultValue != 0)); // Empilha novo fluxo
+			}
+
+			// if (loopResultValue == 0) {
+			// 	if (! loopStack.empty()) loopStack.pop();
+			// 	this.ignoreUntilNextEndloop = true;
+			// } else {
+			// 	if (loopStack.empty()) {
+			// 		loopStack.push(lineNumber);
+			// 	} else {
+			// 		if (loopStack.peek() != lineNumber) {
+			// 			loopStack.push(lineNumber);
+			// 		}
+			// 	}
+			// }
 		}
 
 		endloopMatcher = endloopIdentifier.matcher(line);
 		if (endloopMatcher.find()) {
-			if (this.insideLoop) {
-				this.ignoreNextLoop = true;
-				return whileStart.peek();
+			if (! fluxStack.empty()) {
+				fluxStack.peek().setEndingLine(lineNumber);
+				return fluxStack.peek().getStartingLine();
 			} else {
 				throw new Exception("endloop without being in a loop.");
 			}
@@ -373,7 +462,10 @@ public class BlankInterpreter
 			}
 
 			System.out.println(printResult);
-		}		
+		}
+
+		//System.out.println("If Stack: "   + (ifStack.empty() ? "Empty" : "Has data"));
+		//System.out.println("Loop Stack: " + (loopStack.empty() ? "Empty" : "Has data"));
 
 		return ++lineNumber;
 	}
