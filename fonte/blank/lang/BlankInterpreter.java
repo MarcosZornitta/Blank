@@ -366,29 +366,36 @@ public class BlankInterpreter
 
 		showMatcher = showIdentifier.matcher(line); // Prepara a busca para o token show
 		if (showMatcher.find()) {
+			String[] printArgs;
 			String printResult = "";
 			String analysis = line.split(showIdentifier.toString(), 2)[1]; // pega o que vem após "show"
-			strMatcher      = strIdentifier.matcher(analysis);
-			paramMatcher    = paramIdentifier.matcher(analysis);
-			numberMatcher   = numberIdentifier.matcher(analysis);
 
-			if (strMatcher.find()) {
-				printResult = strMatcher.toMatchResult().group().replace("\"", "");
-			} else if (numberMatcher.find()) {
-				printResult = numberMatcher.toMatchResult().group();
-			} else {
-				if (paramMatcher.find()) {
-					String varName = paramMatcher.toMatchResult().group();
+			printArgs = analysis.split("(\\W|\\b)\\+(\\W|\\b)");
 
-					if (mainScope.hasVariable(varName) >= 0) {
-						var = mainScope.getVariable(varName);
-					} else {
-						throw new BlankException("Variable " + varName + " is not set", lineNumber, line);
+			for (int i = 0; i < printArgs.length; i++) {
+				strMatcher    = strIdentifier.matcher(printArgs[i]);
+				paramMatcher  = paramIdentifier.matcher(printArgs[i]);
+				numberMatcher = numberIdentifier.matcher(printArgs[i]);
+				
+				if (strMatcher.find()) {
+					printResult += strMatcher.toMatchResult().group().replace("\"", "");
+				} else if (numberMatcher.find()) {
+					printResult += numberMatcher.toMatchResult().group().trim();
+				} else {
+					if (paramMatcher.find()) {
+						String varName = paramMatcher.toMatchResult().group();
+
+						if (mainScope.hasVariable(varName) >= 0) {
+							var = mainScope.getVariable(varName);
+						} else {
+							throw new BlankException("Variable " + varName + " is not set", lineNumber, line);
+						}
+
+						printResult += var.getValue();
 					}
-
-					printResult = var.getValue();
 				}
 			}
+
 
 			System.out.println(printResult);
 		}
