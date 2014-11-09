@@ -24,7 +24,7 @@ public class BlankInterpreter
 	private final Pattern varIdentifier         = Pattern.compile("\\bvar\\W+"); // Identifica "var"
 	private final Pattern numberIdentifier      = Pattern.compile("\\d*[\\S\\.]?\\d+");
 	private final Pattern paramIdentifier       = Pattern.compile("(\\w+|\\.+)+"); // Identifica um parametro
-	private final Pattern attributionIdentifier = Pattern.compile("\\w+(\\s+|\\b)\\=(\\s+|\\b)\\w+"); // Identifica "="
+	private final Pattern attributionIdentifier = Pattern.compile("\\w+(\\s+|\\b)\\=(\\s+|\\b)[\\S\\s]+"); // Identifica "="
 	private final Pattern showIdentifier        = Pattern.compile("\\bshow\\s+"); // Identifica "show"
 	private final Pattern askIdentifier         = Pattern.compile("(\\W|\\b)ask(\\W|\\b)");
 	private final Pattern sumSubIdentifier      = Pattern.compile("((\\w+|\\.+)+)(\\s+|\\b)(\\+|\\-)(\\s+|\\b)((\\w+|\\.+)+)"); // Identifica "+" ou "-"
@@ -74,6 +74,42 @@ public class BlankInterpreter
 		}
 
 		return false;
+	}
+
+	/**
+	 *	Interpreta o valor passado retornando o valor sem formatação.
+	 *	
+	 *	@param String val O valor para ser limpo
+	 *	@return String O valor sem suas formatações
+	 */
+	private String parseValue(String val) throws Exception
+	{
+		BlankVar var;
+		Matcher strMatcher    = strIdentifier.matcher(val);
+		Matcher paramMatcher  = paramIdentifier.matcher(val);
+		Matcher numberMatcher = numberIdentifier.matcher(val);
+		
+		if (strMatcher.find()) {
+			// Se for uma string remove as aspas duplas
+			return strMatcher.toMatchResult().group().replace("\"", "");
+		} else if (numberMatcher.find()) {
+			// Se for um número, remove os espaços nos seus limites como String
+			return numberMatcher.toMatchResult().group().trim();
+		} else if (paramMatcher.find()) {
+			// Se for uma variavel, tenta encontrá-la
+			String varName = paramMatcher.toMatchResult().group();
+
+			if (mainScope.hasVariable(varName) >= 0) {
+				var = mainScope.getVariable(varName);
+			} else {
+				throw new Exception("Variable " + varName + " is not set");
+			}
+
+			return var.getValue();
+		}
+
+		// Se não se encaixar em nenhum dos casos, provavelmente não requer formatação
+		return val;
 	}
 
 	private BlankExpression evalExpression(String rawExpression) throws Exception
@@ -191,10 +227,10 @@ public class BlankInterpreter
 			// interpretador decida o que fazer com o valor passado
 			try {
 				Float.parseFloat(rawInput);
-				line = line.replace(rawAsk, " " + in.nextLine() + " ");
+				line = line.replace(rawAsk, " " + rawInput + " ");
 			} catch (Exception e) {
 				// Se não consegue converter em float, usa o valor como string
-				line = line.replace(rawAsk, " \"" + in.nextLine() + "\" ");
+				line = line.replace(rawAsk, " \"" + rawInput + "\" ");
 			}
 		}
 
@@ -260,18 +296,8 @@ public class BlankInterpreter
 				}
 			}
 
-			// Pega o valor proposto para atribuição
-			paramMatcher = paramIdentifier.matcher(value);
-			if (paramMatcher.find()) {
-				String varValue = paramMatcher.toMatchResult().group(); // Pega o valor após o =
-
-				if (mainScope.hasVariable(varValue) >= 0) { // Checa se o valor é uma variavel já definida
-					// encontra a variavel e atribui o valor da outra variavel á esta
-					var.setValue(mainScope.getVariable(varValue).getValue());
-				} else {
-					var.setValue(varValue); // Atribui o valor identificado
-				}
-			}
+			// Trata o valor proposto para atribuição
+			var.setValue(this.parseValue(value));
 		}
 
 		ifMatcher = ifIdentifier.matcher(line);
@@ -382,27 +408,28 @@ public class BlankInterpreter
 			printArgs = analysis.split("(\\W|\\b)\\+(\\W|\\b)");
 
 			for (int i = 0; i < printArgs.length; i++) {
-				strMatcher    = strIdentifier.matcher(printArgs[i]);
-				paramMatcher  = paramIdentifier.matcher(printArgs[i]);
-				numberMatcher = numberIdentifier.matcher(printArgs[i]);
+				printResult += this.parseValue(printArgs[i]);
+				// strMatcher    = strIdentifier.matcher(printArgs[i]);
+				// paramMatcher  = paramIdentifier.matcher(printArgs[i]);
+				// numberMatcher = numberIdentifier.matcher(printArgs[i]);
 				
-				if (strMatcher.find()) {
-					printResult += strMatcher.toMatchResult().group().replace("\"", "");
-				} else if (numberMatcher.find()) {
-					printResult += numberMatcher.toMatchResult().group().trim();
-				} else {
-					if (paramMatcher.find()) {
-						String varName = paramMatcher.toMatchResult().group();
+				// if (strMatcher.find()) {
+				// 	printResult += strMatcher.toMatchResult().group().replace("\"", "");
+				// } else if (numberMatcher.find()) {
+				// 	printResult += numberMatcher.toMatchResult().group().trim();
+				// } else {
+				// 	if (paramMatcher.find()) {
+				// 		String varName = paramMatcher.toMatchResult().group();
 
-						if (mainScope.hasVariable(varName) >= 0) {
-							var = mainScope.getVariable(varName);
-						} else {
-							throw new BlankException("Variable " + varName + " is not set", lineNumber, line);
-						}
+				// 		if (mainScope.hasVariable(varName) >= 0) {
+				// 			var = mainScope.getVariable(varName);
+				// 		} else {
+				// 			throw new BlankException("Variable " + varName + " is not set", lineNumber, line);
+				// 		}
 
-						printResult += var.getValue();
-					}
-				}
+				// 		printResult += var.getValue();
+				// 	}
+				// }
 			}
 
 
