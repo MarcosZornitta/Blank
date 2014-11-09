@@ -42,7 +42,8 @@ public class BlankInterpreter
 	private final Pattern divMultIdentifier     = Pattern.compile("((\\w+|\\.+)+)(\\s+|\\b)(\\*|\\/|\\%)(\\s+|\\b)((\\w+|\\.+)+)"); // Identifica "*", "/" ou "%"
 	private final Pattern logicOpIdentifier     = Pattern.compile("((\\w+|\\.+)+)(\\s+|\\b)(\\<|\\>|\\>\\=|\\<\\=|\\=\\=|\\!\\=|\\&\\&|\\|\\|)(\\s+|\\b)((\\w+|\\.+)+)"); // Identifica operações lógicas >, <
 	private final Pattern operationIdentifier   = Pattern.compile("(\\s+|\\b)(\\*|\\/|\\%|\\+|\\-|\\<|\\>|\\>\\=|\\<\\=|\\=\\=|\\!\\=|\\&\\&|\\|\\|)(\\s+|\\b)"); // Identifica uma operação (+, -, /, *, %, >, <, >=, ==, ...)
-	private final Pattern ifIdentifier          = Pattern.compile("if(\\s+|\\b)\\((\\s+|\\b)(\\d*[\\S\\.]?\\d+)(\\s+|\\b)\\)"); // Identifica "if ()"
+	// private final Pattern ifIdentifier          = Pattern.compile("if(\\s+|\\b)\\((\\s+|\\b)(\\d*[\\S\\.]?\\d+)(\\s+|\\b)\\)"); // Identifica "if ()"
+	private final Pattern ifIdentifier          = Pattern.compile("if(\\s+|\\b)\\((\\s+|\\b)([\\s\\S]+)(\\s+|\\b)\\)"); // Identifica "if ()"
 	private final Pattern elseIdentifier        = Pattern.compile("(\\W|\\b)else(\\W|\\b)"); // Identifica "else"
 	private final Pattern endifIdentifier       = Pattern.compile("(\\W|\\b)endif(\\W|\\b)"); // Identifica "endif"
 	// private final Pattern loopIdentifier        = Pattern.compile("(\\W|\\b)loop(\\s+|\\b)\\((\\s+|\\b)(\\d*[\\S\\.]?\\d+|((\\w+|\\.+)+))(\\s+|\\b)\\)"); // Identifica "loop ()"
@@ -60,12 +61,22 @@ public class BlankInterpreter
 		if (fluxStack.empty()) return false;
 
 		Matcher loopMatcher    = loopIdentifier.matcher(line);
+		Matcher ifMatcher      = ifIdentifier.matcher(line);
 		Matcher endFluxMatcher = (fluxStack.peek().getEndFluxPattern().matcher(line));
+		Matcher elseMatcher    = elseIdentifier.matcher(line);
 
 		// Enquanto o último resultado de Loop for falso
 		if (fluxStack.peek().result() == false) {
 			if (loopMatcher.find()) {
 				fluxStack.push(new BlankFlux(0, endloopIdentifier, false));
+			}
+
+			if (ifMatcher.find()) {
+				fluxStack.push(new BlankFlux(0, endifIdentifier, false));
+			}
+
+			if (elseMatcher.find()) {
+				fluxStack.peek().setResult(!fluxStack.peek().result());
 			}
 
 			if (endFluxMatcher.find()) {
@@ -151,6 +162,7 @@ public class BlankInterpreter
 		Matcher endloopMatcher;
 		Matcher strMatcher;
 		Matcher commentMatcher;
+		Matcher elseMatcher;
 
 		// Variável auxiliar para guardar variaveis
 		BlankVar var = null;
@@ -235,7 +247,7 @@ public class BlankInterpreter
 				if (mainScope.hasVariable(varName) >= 0) {
 					var = mainScope.getVariable(varName);
 				} else {
-					throw new Exception("Variable " + varName + " is not set.");
+					throw new BlankException("Variable " + varName + " is not set", lineNumber, line);
 				}
 			}
 
@@ -281,25 +293,27 @@ public class BlankInterpreter
 
 			// Depois de todas as operações, identifica a linha inicial do if na pilha de ifs
 
-			// Se o resultado for falso
-			if (ifResultValue == 0) {
-				this.ignoreUntilNextElse = true;
+			// Se o loop que está no topo, não é o mesmo da linha atual
+			if (fluxStack.empty() || fluxStack.peek().getStartingLine() != lineNumber) {
+				fluxStack.push(new BlankFlux(lineNumber, endifIdentifier, ifResultValue != 0)); // Empilha novo fluxo
+			}
+		}
+
+		elseMatcher = elseIdentifier.matcher(line);
+		if (elseMatcher.find()) {
+			if (fluxStack.empty()) {
+				throw new BlankException("There is no if for this else", lineNumber, line);
 			} else {
-				if (ifStack.empty()) {
-					ifStack.push(lineNumber);
-				} else {
-					if (ifStack.peek() != lineNumber) ifStack.push(lineNumber);
-				}
-				this.ignoreNextElse = true;
+				fluxStack.peek().setResult(! fluxStack.peek().result()); // Inverte o estado do If
 			}
 		}
 
 		endIfMatcher = endifIdentifier.matcher(line);
 		if (endIfMatcher.find()) {
-			if (ifStack.empty()) {
-				throw new Exception("There is no if for this endif");
+			if (fluxStack.empty()) {
+				throw new BlankException("There is no if for this endif", lineNumber, line);
 			} else {
-				ifStack.pop();
+				fluxStack.pop();
 			}
 		}
 
@@ -329,7 +343,7 @@ public class BlankInterpreter
 				loopResultValue = Float.parseFloat(loopResult); // Atribui o valor identificado
 			}
 
-			// Se o loop que está no topo, não é o mesmo da linha atual
+			// Se o loop que está no topo não é o mesmo da linha atual
 			if (fluxStack.empty() || fluxStack.peek().getStartingLine() != lineNumber) {
 				fluxStack.push(new BlankFlux(lineNumber, endloopIdentifier, loopResultValue != 0)); // Empilha novo fluxo
 			}
@@ -347,7 +361,7 @@ public class BlankInterpreter
 				fluxStack.peek().setEndingLine(lineNumber);
 				return fluxStack.peek().getStartingLine();
 			} else {
-				throw new Exception("endloop without being in a loop.");
+				throw new BlankException("endloop without being in a loop", lineNumber, line);
 			}
 		}
 
@@ -370,7 +384,7 @@ public class BlankInterpreter
 					if (mainScope.hasVariable(varName) >= 0) {
 						var = mainScope.getVariable(varName);
 					} else {
-						throw new Exception("Variable " + varName + " is not set.");
+						throw new BlankException("Variable " + varName + " is not set", lineNumber, line);
 					}
 
 					printResult = var.getValue();
