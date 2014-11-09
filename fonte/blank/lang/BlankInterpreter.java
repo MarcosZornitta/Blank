@@ -45,7 +45,8 @@ public class BlankInterpreter
 	private final Pattern ifIdentifier          = Pattern.compile("if(\\s+|\\b)\\((\\s+|\\b)(\\d*[\\S\\.]?\\d+)(\\s+|\\b)\\)"); // Identifica "if ()"
 	private final Pattern elseIdentifier        = Pattern.compile("(\\W|\\b)else(\\W|\\b)"); // Identifica "else"
 	private final Pattern endifIdentifier       = Pattern.compile("(\\W|\\b)endif(\\W|\\b)"); // Identifica "endif"
-	private final Pattern loopIdentifier        = Pattern.compile("(\\W|\\b)loop(\\s+|\\b)\\((\\s+|\\b)(\\d*[\\S\\.]?\\d+)(\\s+|\\b)\\)"); // Identifica "loop ()"
+	// private final Pattern loopIdentifier        = Pattern.compile("(\\W|\\b)loop(\\s+|\\b)\\((\\s+|\\b)(\\d*[\\S\\.]?\\d+|((\\w+|\\.+)+))(\\s+|\\b)\\)"); // Identifica "loop ()"
+	private final Pattern loopIdentifier        = Pattern.compile("(\\W|\\b)loop(\\s+|\\b)\\((\\s+|\\b)([\\s\\S]+)(\\s+|\\b)\\)"); // Identifica "loop ()"
 	private final Pattern endloopIdentifier     = Pattern.compile("(\\W|\\b)endloop(\\W|\\b)"); // Identifica "endif"
 	private final Pattern parenthesisIdentifier = Pattern.compile("\\([\\s\\S]+\\)"); // Identifica "(conteudo)"
 	private final Pattern strIdentifier         = Pattern.compile("\\\"[\\s\\S]+\\\"");
@@ -59,18 +60,15 @@ public class BlankInterpreter
 		if (fluxStack.empty()) return false;
 
 		Matcher loopMatcher    = loopIdentifier.matcher(line);
-		Matcher endloopMatcher = endloopIdentifier.matcher(line);
 		Matcher endFluxMatcher = (fluxStack.peek().getEndFluxPattern().matcher(line));
 
 		// Enquanto o último resultado de Loop for falso
 		if (fluxStack.peek().result() == false) {
 			if (loopMatcher.find()) {
-				BlankFlux obsoleteLoop = new BlankFlux(0, loopIdentifier, false);
-				fluxStack.push(obsoleteLoop);
+				fluxStack.push(new BlankFlux(0, endloopIdentifier, false));
 			}
 
 			if (endFluxMatcher.find()) {
-				System.out.println("pop");
 				fluxStack.pop();
 			}
 
@@ -333,11 +331,13 @@ public class BlankInterpreter
 
 			// Se o loop que está no topo, não é o mesmo da linha atual
 			if (fluxStack.empty() || fluxStack.peek().getStartingLine() != lineNumber) {
-				fluxStack.push(new BlankFlux(lineNumber, loopIdentifier, loopResultValue != 0)); // Empilha novo fluxo
+				fluxStack.push(new BlankFlux(lineNumber, endloopIdentifier, loopResultValue != 0)); // Empilha novo fluxo
 			}
 
 			if (loopResultValue == 0) {
-				return (fluxStack.pop().getEndingLine() + 1);
+				if (fluxStack.peek().getEndingLine() != 0) {
+					return (fluxStack.pop().getEndingLine() + 1);
+				}
 			}
 		}
 
@@ -379,9 +379,6 @@ public class BlankInterpreter
 
 			System.out.println(printResult);
 		}
-
-		//System.out.println("If Stack: "   + (ifStack.empty() ? "Empty" : "Has data"));
-		//System.out.println("Loop Stack: " + (loopStack.empty() ? "Empty" : "Has data"));
 
 		return ++lineNumber;
 	}
