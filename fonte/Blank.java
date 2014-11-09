@@ -37,7 +37,11 @@ class Blank
 		 *	então o loop de leitura é parado.
 		 */
 		while (lineNumber >= 0 && lineNumber < lines.size()) {
-			lineNumber = interpreter.understand(lines.get(lineNumber), lineNumber);
+			try {
+				lineNumber = interpreter.understand(lines.get(lineNumber), lineNumber);
+			} catch (Exception e) {
+				throw new BlankException("Erro desconhecido \"" + e.getMessage() + "\"", lineNumber, lines.get(lineNumber));
+			}
 		}
 	}
 }
