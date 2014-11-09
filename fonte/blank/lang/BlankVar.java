@@ -1,3 +1,8 @@
+/**
+ *	Representa uma variável da linguagem Blank.
+ *	Guarda o valor como String.
+ */
+
 package blank.lang;
 
 class BlankVar
