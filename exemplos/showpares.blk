@@ -1,0 +1,8 @@
+var test = 0
+
+loop (test <= 10)
+	if (test % 2 == 0)
+		show test
+	endif
+	test = test + 1
+endloop
