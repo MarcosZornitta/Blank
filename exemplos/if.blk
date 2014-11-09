@@ -3,6 +3,7 @@ var b = 2
 var c = 3
 
 if (a == 1)
+	show "Devo mostrar 1!"
 	show a
 else
 	show b
@@ -11,6 +12,7 @@ endif
 if (a != 1)
 	show b
 else
+	show "Devo mostrar 1!"
 	show a
 endif
 
@@ -18,8 +20,10 @@ if (b < a)
 	show a
 else
 	if (a == 1)
+		show "Devo mostrar 3!"
 		show c
 	endif
 endif
 
+show "Devo mostrar 3!"
 show c

@@ -1,0 +1,27 @@
+if (1 > 2)
+	show "errado!"
+endif
+
+if (1 < 2)
+	show "correto!"
+endif
+
+if (1 > 2)
+	show "errado!"
+	if (0 == 0)
+		show "errado!"
+	endif
+else
+	show "correto!"
+	if (0 == 0)
+		show "correto!"
+	else
+		show "errado!"
+	endif
+endif
+
+if (2 > 1)
+	show "correto!"
+else
+	show "errado!"
+endif
