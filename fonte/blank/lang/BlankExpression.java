@@ -15,6 +15,8 @@ class BlankExpression
 	public static final String OP_EQL = "==";
 	public static final String OP_DIF = "!=";
 	public static final String OP_MOD = "%";
+	public static final String OP_AND = "&&";
+	public static final String OP_OR  = "||";
 
 	private float param1, param2;
 	private String op;
@@ -100,6 +102,16 @@ class BlankExpression
 
 			case OP_DIF:
 				boolResult = param1 != param2;
+				result = boolResult.toString() == "true" ? 1f : 0f;
+				break;
+
+			case OP_AND:
+				boolResult = ((param1 != 0) && (param2 != 0));
+				result = boolResult.toString() == "true" ? 1f : 0f;
+				break;
+
+			case OP_OR:
+				boolResult = ((param1 != 0) || (param2 != 0));
 				result = boolResult.toString() == "true" ? 1f : 0f;
 				break;
 
