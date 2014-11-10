@@ -6,7 +6,7 @@
 
 package blank.lang;
 
-class BlankException extends Exception
+public class BlankException extends Exception
 {
 	private int errorLineNumber;
 	private String errorLine;

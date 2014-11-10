@@ -217,7 +217,7 @@ public class BlankInterpreter
 
 		// Ferramenta de leitura da entrada padrão
 		askMatcher = askIdentifier.matcher(line);
-		if (askMatcher.find()) {
+		while (askMatcher.find()) {
 			String rawInput;
 			String rawAsk = askMatcher.toMatchResult().group();
 
@@ -232,6 +232,8 @@ public class BlankInterpreter
 				// Se não consegue converter em float, usa o valor como string
 				line = line.replace(rawAsk, " \"" + rawInput + "\" ");
 			}
+
+			askMatcher = askIdentifier.matcher(line);
 		}
 
 		divMultMatcher = divMultIdentifier.matcher(line); // prepara a busca para operações de *, / e %
@@ -409,7 +411,7 @@ public class BlankInterpreter
 			String printResult = "";
 			String analysis = line.split(showIdentifier.toString(), 2)[1]; // pega o que vem após "show"
 
-			printArgs = analysis.split("(\\W|\\b)\\+(\\W|\\b)");
+			printArgs = analysis.split("(\\W)\\.(\\W)");
 
 			for (int i = 0; i < printArgs.length; i++) {
 				try {
