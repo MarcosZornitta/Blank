@@ -112,6 +112,18 @@ public class BlankInterpreter
 		return val;
 	}
 
+	private String clearStrings(String line)
+	{
+		Matcher strMatcher = strIdentifier.matcher(line);
+
+		while(strMatcher.find()) {
+			line = line.replace(strMatcher.toMatchResult().group(), "");
+			strMatcher = strIdentifier.matcher(line);
+		}
+
+		return line;
+	}
+
 	private BlankExpression evalExpression(String rawExpression) throws Exception
 	{
 		BlankVar var; // variavel auxiliar para guardar uma BlankVar
